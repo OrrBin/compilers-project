@@ -9,15 +9,15 @@
                     <call>
                         <ownerExpr>
                             <new-object>
-<classId>Fac</classId>
+                                <classId>Fac</classId>
                             </new-object>
                         </ownerExpr>
                         <methodId>ComputeFac</methodId>
                         <actuals>
                             <actual>
-<int-literal>
-    <num>10</num>
-</int-literal>
+                                <int-literal>
+                                    <num>10</num>
+                                </int-literal>
                             </actual>
                         </actuals>
                     </call>
@@ -40,7 +40,7 @@
                         <formal>
                             <lineNumber>9</lineNumber>
                             <type>
-<int/>
+                                <int/>
                             </type>
                             <name>num</name>
                         </formal>
@@ -49,7 +49,7 @@
                         <vardecl>
                             <lineNumber>11</lineNumber>
                             <type>
-<int/>
+                                <int/>
                             </type>
                             <name>num_aux</name>
                         </vardecl>
@@ -57,74 +57,74 @@
                     <body>
                         <if>
                             <cond>
-<lt>
-    <e1>
-        <ref-id>
-            <id>num</id>
-        </ref-id>
-    </e1>
-    <e2>
-        <int-literal>
-            <num>1</num>
-        </int-literal>
-    </e2>
-</lt>
+                                <lt>
+                                    <e1>
+                                        <ref-id>
+                                            <id>num</id>
+                                        </ref-id>
+                                    </e1>
+                                    <e2>
+                                        <int-literal>
+                                            <num>1</num>
+                                        </int-literal>
+                                    </e2>
+                                </lt>
                             </cond>
                             <thencase>
-<block>
-    <statements>
-        <assign>
-            <lv>num_aux</lv>
-            <rv>
-                <int-literal>
-                    <num>1</num>
-                </int-literal>
-            </rv>
-        </assign>
-    </statements>
-</block>
+                                <block>
+                                    <statements>
+                                        <assign>
+                                            <lv>num_aux</lv>
+                                            <rv>
+                                                <int-literal>
+                                                    <num>1</num>
+                                                </int-literal>
+                                            </rv>
+                                        </assign>
+                                    </statements>
+                                </block>
                             </thencase>
                             <elsecase>
-<block>
-    <statements>
-        <assign>
-            <lv>num_aux</lv>
-            <rv>
-                <mult>
-                    <e1>
-                        <ref-id>
-                            <id>num</id>
-                        </ref-id>
-                    </e1>
-                    <e2>
-                        <call>
-                            <ownerExpr>
-<this/>
-                            </ownerExpr>
-                            <methodId>ComputeFac</methodId>
-                            <actuals>
-<actual>
-    <subtract>
-        <e1>
-            <ref-id>
-                <id>num</id>
-            </ref-id>
-        </e1>
-        <e2>
-            <int-literal>
-                <num>1</num>
-            </int-literal>
-        </e2>
-    </subtract>
-</actual>
-                            </actuals>
-                        </call>
-                    </e2>
-                </mult>
-            </rv>
-        </assign>
-    </statements>
-</block>
+                                <block>
+                                    <statements>
+                                        <assign>
+                                            <lv>num_aux</lv>
+                                            <rv>
+                                                <mult>
+                                                    <e1>
+                                                        <ref-id>
+                                                            <id>num</id>
+                                                        </ref-id>
+                                                    </e1>
+                                                    <e2>
+                                                        <call>
+                                                            <ownerExpr>
+                                                                <this/>
+                                                            </ownerExpr>
+                                                            <methodId>ComputeFac</methodId>
+                                                            <actuals>
+                                                                <actual>
+                                                                    <subtract>
+                                                                        <e1>
+                                                                            <ref-id>
+                                                                                <id>num</id>
+                                                                            </ref-id>
+                                                                        </e1>
+                                                                        <e2>
+                                                                            <int-literal>
+                                                                                <num>1</num>
+                                                                            </int-literal>
+                                                                        </e2>
+                                                                    </subtract>
+                                                                </actual>
+                                                            </actuals>
+                                                        </call>
+                                                    </e2>
+                                                </mult>
+                                            </rv>
+                                        </assign>
+                                    </statements>
+                                </block>
                             </elsecase>
                         </if>
                     </body>

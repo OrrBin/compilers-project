@@ -1,4 +1,6 @@
 import ast.*;
+import solution.RenameOp;
+import solution.Renamer;
 
 import java.io.*;
 
@@ -52,7 +54,8 @@ public class Main {
                     } else {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
-
+//                    Renamer renamer = new Renamer(prog);
+//                    renamer.rename(new RenameOp(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
                     throw new UnsupportedOperationException("TODO - Ex. 1");
 
                 } else {

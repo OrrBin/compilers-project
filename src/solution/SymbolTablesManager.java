@@ -12,12 +12,15 @@ public class SymbolTablesManager {
     Map<AstNode, SymbolTable> ast2SymbolicTable = new HashMap<>();
 
     /**
-     * reference to symbol table of enclosing scope
+     * get reference to symbol table of enclosing scope
      **/
     public SymbolTable getEnclosingScope(AstNode astNode) {
         return ast2SymbolicTable.get(astNode);
     }
 
+    /**
+     * set reference to symbol table of enclosing scope
+     **/
     public void setEnclosingScope(AstNode astNode, SymbolTable symbolTable) {
         ast2SymbolicTable.put(astNode, symbolTable);
     }

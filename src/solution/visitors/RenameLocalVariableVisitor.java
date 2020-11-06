@@ -1,14 +1,19 @@
 package solution.visitors;
 
 import ast.*;
-import solution.RenameOp;
+import solution.actions.RenameOp;
+import solution.RenameOpParams;
+
+import java.util.List;
 
 public class RenameLocalVariableVisitor implements Visitor {
 
-    private RenameOp op;
+    private RenameOpParams op;
+    private List<RenameOp<?>> renameOps;
 
-    public RenameLocalVariableVisitor(RenameOp op) {
+    public RenameLocalVariableVisitor(RenameOpParams op, List<RenameOp<?>> renameOps) {
         this.op = op;
+        this.renameOps = renameOps;
     }
 
     @Override
@@ -28,7 +33,8 @@ public class RenameLocalVariableVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
-        // No need for action
+        methodDecl.vardecls().forEach((var -> var.accept(this)) );
+        methodDecl.body().forEach((statement -> statement.accept(this)) );
     }
 
     @Override

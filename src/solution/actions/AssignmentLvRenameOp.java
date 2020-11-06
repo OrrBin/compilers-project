@@ -4,9 +4,9 @@ import ast.AssignStatement;
 import ast.VarDecl;
 import solution.RenameOpParams;
 
-public class LvRenameOp extends RenameOp<AssignStatement> {
+public class AssignmentLvRenameOp extends RenameOp<AssignStatement> {
 
-    public LvRenameOp(RenameOpParams params, AssignStatement node) {
+    public AssignmentLvRenameOp(RenameOpParams params, AssignStatement node) {
         super(params, node);
     }
 

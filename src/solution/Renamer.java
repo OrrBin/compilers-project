@@ -51,9 +51,6 @@ public class Renamer {
     private void renameField(RenameOpParams op) {
     }
 
-    private void executeRenameOps(List<RenameOp<?>> renameOps) {
-        renameOps.forEach(RenameOp::rename);
-    }
 
     public void renameMethod(RenameOpParams op) {
 
@@ -61,5 +58,9 @@ public class Renamer {
 
     private VariableType findVariableType(String originalName, int originalLine) {
         return VariableType.LOCAL;
+    }
+
+    private void executeRenameOps(List<RenameOp<?>> renameOps) {
+        renameOps.forEach(RenameOp::rename);
     }
 }

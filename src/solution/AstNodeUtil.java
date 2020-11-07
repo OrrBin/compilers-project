@@ -1,13 +1,13 @@
 package solution;
 
-import ast.AstNode;
-import ast.ClassDecl;
-import ast.MethodDecl;
-import ast.VariableIntroduction;
+import ast.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AstNodeUtil {
 
-    SymbolTablesManager symbolTablesManager;
+    private SymbolTablesManager symbolTablesManager;
 
     public AstNodeUtil(SymbolTablesManager symbolTablesManager) {
         this.symbolTablesManager = symbolTablesManager;
@@ -15,35 +15,45 @@ public class AstNodeUtil {
 
     // region General
 
+    public MethodDecl getMethod(AstNode astNode){
+        return null;
+    }
+
     public ClassDecl getClassDeclaration(AstNode astNode){
         return null;
     }
 
     // endregion
 
-    // region Variables
+    // region Classes
 
-    public MethodDecl getClassMethod(VariableIntroduction var){
-        if (isField(var)){
-            return null;
-        }
-        return null;
-    }
-
-    public boolean isLocal(VariableIntroduction var){
-        return true;
-    }
-
-    public boolean isParameter(VariableIntroduction var) {
-        return true;
-    }
-
-    public boolean isField(VariableIntroduction var){
-        return true;
+    public List<ClassDecl> getExtendingClasses(ClassDecl classDecl) {
+        List<ClassDecl> extendingClasses = new ArrayList<>();
+        return extendingClasses;
     }
 
     // endregion
 
+    // region Variables
+
+    public boolean isLocal(VarDecl var){ return true; }
+    public boolean isLocal(IdentifierExpr var){ return true; }
+
+    public boolean isParameter(VarDecl var) {
+        return true;
+    }
+    public boolean isParameter(IdentifierExpr var) {
+        return true;
+    }
+
+    public boolean isField(VarDecl var){
+        return true;
+    }
+    public boolean isField(IdentifierExpr var){
+        return true;
+    }
+
+    // endregion
 
     // region Methods
     // endregion

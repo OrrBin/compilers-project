@@ -1,9 +1,11 @@
 package solution;
 
 import ast.AstNode;
+import solution.symbol_table.symbol_table_types.SymbolTable;
 
 import java.util.HashMap;
 import java.util.Map;
+
 
 // TODO implement this class after SymbolicTable interface is published
 

@@ -2,17 +2,13 @@ package solution;
 
 import ast.AstNode;
 import ast.Program;
+import ast.VarDecl;
 
-public class ProgramCrawler {
+//TODO: Orr
+public interface ProgramCrawler {
 
-    private Program program;
 
-    public ProgramCrawler(Program program) {
-        this.program = program;
-    }
+    public <T extends AstNode> T findAncestor(int lineNumber, Class<T> clazz);
 
-    //TODO: Orr
-    public <T extends AstNode> T findAncestor(int lineNumber, Class<T> clazz) {
-        return null;
-    }
+    public <T extends AstNode> T findByLineNumber(int originalLine, Class<T> varDeclClass);
 }

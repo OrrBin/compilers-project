@@ -1,8 +1,40 @@
 package solution.visitors;
 
-import ast.*;
+import ast.AddExpr;
+import ast.AndExpr;
+import ast.ArrayAccessExpr;
+import ast.ArrayLengthExpr;
+import ast.AssignArrayStatement;
+import ast.AssignStatement;
+import ast.BlockStatement;
+import ast.BoolAstType;
+import ast.ClassDecl;
+import ast.FalseExpr;
+import ast.FormalArg;
+import ast.IdentifierExpr;
+import ast.IfStatement;
+import ast.IntArrayAstType;
+import ast.IntAstType;
+import ast.IntegerLiteralExpr;
+import ast.LtExpr;
+import ast.MainClass;
+import ast.MethodCallExpr;
+import ast.MethodDecl;
+import ast.MultExpr;
+import ast.NewIntArrayExpr;
+import ast.NewObjectExpr;
+import ast.NotExpr;
+import ast.Program;
+import ast.RefType;
+import ast.SubtractExpr;
+import ast.SysoutStatement;
+import ast.ThisExpr;
+import ast.TrueExpr;
+import ast.VarDecl;
+import ast.Visitor;
+import ast.WhileStatement;
 import solution.AstNodeUtil;
-import solution.RenameOp;
+import solution.RenameOpParams;
 
 import java.util.List;
 
@@ -10,9 +42,9 @@ import java.util.List;
 public class RenameFieldVisitor implements Visitor {
 
     private AstNodeUtil astNodeUtil;
-    private RenameOp op;
+    private RenameOpParams op;
 
-    public RenameFieldVisitor(RenameOp op) {
+    public RenameFieldVisitor(RenameOpParams op) {
         this.op = op;
     }
 

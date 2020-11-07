@@ -1,6 +1,4 @@
 import ast.*;
-import solution.RenameOp;
-import solution.Renamer;
 
 import java.io.*;
 

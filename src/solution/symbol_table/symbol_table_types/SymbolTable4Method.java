@@ -8,9 +8,5 @@ public class SymbolTable4Method extends SymbolTable {
         super(symbolTableScope);
     }
 
-    public SymbolTable4Method(SymbolTable parentSymbolTable, AstNode symbolTableScope) {
-        super(parentSymbolTable, symbolTableScope);
-
-    }
 
 }

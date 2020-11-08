@@ -37,7 +37,6 @@ import solution.actions.AssignArrayLvRenameOp;
 import solution.actions.AssignmentLvRenameOp;
 import solution.actions.IdentifierRenameOp;
 import solution.actions.RenameOp;
-import solution.actions.VarDeclRenameOp;
 
 import java.util.List;
 
@@ -72,9 +71,7 @@ public abstract class RenameVariableVisitor implements Visitor {
 
     @Override
     public void visit(VarDecl varDecl) {
-        if (varDecl.name().equals(op.originalName)) {
-            renameOps.add(new VarDeclRenameOp(op, varDecl));
-        }
+        // No need for action
     }
 
     @Override
@@ -166,7 +163,8 @@ public abstract class RenameVariableVisitor implements Visitor {
 
     @Override
     public void visit(MethodCallExpr e) {
-        // No need for action
+        // actuals are the parameters for the method arguments
+        e.actuals().forEach(actual -> actual.accept(this));
     }
 
     @Override
@@ -227,6 +225,6 @@ public abstract class RenameVariableVisitor implements Visitor {
 
     @Override
     public void visit(RefType t) {
-        // No need for action
+        // only classes - No need for action
     }
 }

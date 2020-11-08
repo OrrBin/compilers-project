@@ -7,22 +7,24 @@ import ast.Program;
 import ast.VarDecl;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
+import solution.visitors.RenameFieldVariableVisitor;
 import solution.visitors.RenameLocalVariableVisitor;
 import solution.visitors.RenameParameterVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Renamer {
 
-    private final SymbolTablesManager manager;
+    private final AstNodeUtil astNodeUtil;
     private Program prog;
     private ProgramCrawler crawler;
     private List<RenameOp<?>> renameOps;
 
-    public Renamer(Program prog, SymbolTablesManager manager) {
+    public Renamer(Program prog, AstNodeUtil astNodeUtil) {
         this.prog = prog;
 //        this.crawler = new ProgramCrawler(prog);
-        this.manager = manager;
+        this.astNodeUtil = astNodeUtil;
     }
 
     public void rename(RenameOpParams op) throws Exception {
@@ -34,7 +36,8 @@ public class Renamer {
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VariableType variableType = findVariableType(op.originalName, op.originalLine);
+        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:
                 renameField(op);
@@ -50,7 +53,7 @@ public class Renamer {
 
     private void renameLocal(RenameOpParams op) throws Exception {
         VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
-        SymbolTable table = manager.getEnclosingScope(var);
+        SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
             throw new Exception("table.symbolTableScope expected to be of type MethodDecl but was of type : " + node.getClass());
@@ -63,7 +66,7 @@ public class Renamer {
 
     private void renameParameter(RenameOpParams op) throws Exception {
         VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
-        SymbolTable table = manager.getEnclosingScope(var);
+        SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
             throw new Exception("table.symbolTableScope expected to be of type MethodDecl but was of type : " + node.getClass());
@@ -75,16 +78,22 @@ public class Renamer {
     }
 
     private void renameField(RenameOpParams op) {
-    }
+        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        ClassDecl clazz = astNodeUtil.getClassDeclaration(var); // will find the super class
 
+        List<ClassDecl> classes = new ArrayList<>();
+        classes.add(clazz);
+        classes.addAll(astNodeUtil.getExtendingClasses(clazz));
+        RenameFieldVariableVisitor visitor = new RenameFieldVariableVisitor(op, renameOps, astNodeUtil);
+
+        for (ClassDecl classDecl : classes) {
+            classDecl.accept(visitor);
+        }
+    }
 
     public void renameMethod(RenameOpParams op) {
-
     }
 
-    private VariableType findVariableType(String originalName, int originalLine) {
-        return VariableType.LOCAL;
-    }
 
     private void executeRenameOps(List<RenameOp<?>> renameOps) {
         renameOps.forEach(RenameOp::rename);

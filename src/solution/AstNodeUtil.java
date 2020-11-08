@@ -69,14 +69,56 @@ public class AstNodeUtil {
         throw new Exception("Can't determine variable type");
     }
 
-    public boolean isLocal(VarDecl var){ return true; }
-    public boolean isLocal(IdentifierExpr var){ return true; }
+    public boolean isLocal(VarDecl var){
+        SymbolTable symbolTable = getEnclosingScope(var);
+        if (symbolTable.symbolTableScope instanceof MethodDecl){
+            return ((MethodDecl)symbolTable.symbolTableScope).vardecls().contains(var);
+        } else {
+            return false;
+        }
+    }
 
-    public boolean isParameter(VarDecl var) { return true; }
-    public boolean isParameter(IdentifierExpr var) { return true; }
+    public boolean isLocal(IdentifierExpr var) {
+        MethodDecl method = (MethodDecl) getEnclosingScope(var).symbolTableScope;
+        for (VarDecl localVar : method.vardecls()) {
+            if (localVar.name().equals(var.id())) {
+                    /* enclosing method contains local variable with same name,
+                      since var declarations are at the beginning of the method - the local var overrides the field */
+                return true;
+            }
+        }
+        return false;
+    }
 
-    public boolean isField(VarDecl var){ return true;}
-    public boolean isField(IdentifierExpr var){ return true; }
+    public boolean isParameter(VarDecl var) {
+        SymbolTable symbolTable = getEnclosingScope(var);
+        if (symbolTable.symbolTableScope instanceof MethodDecl) {
+            return ((MethodDecl)symbolTable.symbolTableScope).formals().contains(var);
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isParameter(IdentifierExpr var) {
+        MethodDecl method = (MethodDecl) getEnclosingScope(var).symbolTableScope;
+        for (FormalArg formalVar : method.formals()) {
+            if (formalVar.name().equals(var.id())) {
+                    /* enclosing method contains local variable with same name,
+                      since var declarations are at the beginning of the method - the local var overrides the field */
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isField(VarDecl var){
+        return !isLocal(var) && !isParameter(var);
+    }
+
+
+    public boolean isField(IdentifierExpr var){
+        return !isLocal(var) && !isParameter(var);
+    }
 
     // endregion
 

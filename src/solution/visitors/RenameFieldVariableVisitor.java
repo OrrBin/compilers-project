@@ -44,7 +44,7 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
         boolean isField = true;
         var lv = assignStatement.lv();
         if (lv.equals(op.originalName)) {
-            MethodDecl method = astNodeUtil.getMethod(assignStatement);
+            MethodDecl method = (MethodDecl) astNodeUtil.getEnclosingScope(assignStatement).symbolTableScope;
             for (VarDecl var : method.vardecls()) {
                 if (var.name().equals(op.originalName)) {
                     /* enclosing method contains local variable with same name,

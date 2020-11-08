@@ -2,9 +2,10 @@ package solution;
 
 import ast.*;
 import solution.symbol_table.symbol_table_types.SymbolTable;
+import solution.symbol_table.symbol_table_types.SymbolTable4Class;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AstNodeUtil {
 
@@ -17,24 +18,37 @@ public class AstNodeUtil {
     // region General
 
     public MethodDecl getMethod(AstNode astNode){
-        return null;
+        SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(astNode);
+        AstNode node  = symbolTable.symbolTableScope;
+        if (!(node instanceof MethodDecl)) {
+            throw new RuntimeException("table.symbolTableScope expected to be of type MethodDecl but was of type : " + node.getClass());
+        }
+        return (MethodDecl)node;
     }
 
     public ClassDecl getClassDeclaration(AstNode astNode){
-        return null;
+        SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(astNode);
+        while (!(symbolTable.symbolTableScope instanceof ClassDecl)){
+            symbolTable = symbolTable.parentSymbolTable;
+            if (symbolTable == null){
+                throw new RuntimeException("Couln't find symbolTableScope of ClassDecl for node of type: " + astNode.getClass());
+            }
+        }
+
+        return (ClassDecl)symbolTable.symbolTableScope;
     }
 
     public SymbolTable getEnclosingScope(AstNode astNode) {
         return symbolTablesManager.getEnclosingScope(astNode);
     }
 
-        // endregion
+    // endregion
 
     // region Classes
 
     public List<ClassDecl> getExtendingClasses(ClassDecl classDecl) {
-        List<ClassDecl> extendingClasses = new ArrayList<>();
-        return extendingClasses;
+        SymbolTable4Class rootSymbolTable = (SymbolTable4Class)getEnclosingScope(classDecl);
+        return rootSymbolTable.childrenSymbolTables.stream().map(symbolTable -> (ClassDecl)symbolTable.symbolTableScope).collect(Collectors.toList());
     }
 
     // endregion

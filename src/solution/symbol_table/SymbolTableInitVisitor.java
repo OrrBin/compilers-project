@@ -11,31 +11,37 @@ import solution.symbol_table.symbol_types.MethodSymbol;
 import solution.symbol_table.symbol_types.Symbol;
 import solution.symbol_table.symbol_types.VarSymbol;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 public class SymbolTableInitVisitor implements Visitor {
     SymbolTablesManager symbolTablesManager;
-    Name2AstNodeVisitor name2AstNodeVisitor;
+    Map<String, ClassDecl> name2AstNodeMap;
     Stack<AstNode> curScopeStack;
 
-    public SymbolTableInitVisitor(SymbolTablesManager symbolTablesManager,
-                                  Name2AstNodeVisitor name2AstNodeVisitor){
+    public SymbolTableInitVisitor(SymbolTablesManager symbolTablesManager){
 
         this.symbolTablesManager = symbolTablesManager;
-        this.name2AstNodeVisitor =name2AstNodeVisitor;
+        name2AstNodeMap = new HashMap<>();
         curScopeStack = new Stack<>();
 
     }
 
+    void initName2ClassNode(Program program){
+        for(ClassDecl c: program.classDecls()){
+            name2AstNodeMap.put(c.name(), c);
+        }
+    }
 
     void updateParentTableRef(ClassDecl classDecl){
         SymbolTable classSymbolTable = symbolTablesManager.getEnclosingScope(classDecl);
 
-        var parent = name2AstNodeVisitor.name2AstNode.get(classDecl.superName());
+        var parent = name2AstNodeMap.get(classDecl.superName());
         if(parent == null) {
             //program will be the parent of classDecl
-            var programParent = curScopeStack.lastElement();
-            classSymbolTable.parentSymbolTable = symbolTablesManager.getEnclosingScope(programParent);
+            var programIsParent = curScopeStack.lastElement();
+            classSymbolTable.parentSymbolTable = symbolTablesManager.getEnclosingScope(programIsParent);
             return;
      }
 
@@ -50,15 +56,15 @@ public class SymbolTableInitVisitor implements Visitor {
 
     void updateManager4NonDeclScopeAstNodes(AstNode node){
         var declScope = curScopeStack.lastElement();
-        SymbolTable formalSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
-        symbolTablesManager.setEnclosingScope(node, formalSymbolTable);
+        SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
+        symbolTablesManager.setEnclosingScope(node, scopeSymbolTable);
     }
 
     @Override
     public void visit(Program program) {
 
         //initializing name2AstNodeMap
-        name2AstNodeVisitor.visit(program);
+        initName2ClassNode(program);
 
         SymbolTable rootTable = new SymbolTable(program);
         symbolTablesManager.setEnclosingScope(program, rootTable);

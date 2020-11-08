@@ -15,13 +15,9 @@ public  class SymbolTable {
     public SymbolTable(AstNode symbolTableScope)
     {
         this.symbolTableScope = symbolTableScope;
-    }
-
-    public SymbolTable(SymbolTable parentSymbolTable, AstNode symbolTableScope) {
-        this(symbolTableScope);
-        this.parentSymbolTable = parentSymbolTable;
         entries = new HashMap<>();
     }
+
 
     public void addSymbol2Table(Symbol symbol) {
         String id = symbol.id;

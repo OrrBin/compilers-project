@@ -13,8 +13,4 @@ public class SymbolTable4Class extends SymbolTable {
         childrenSymbolTables = new ArrayList<>();
     }
 
-    public SymbolTable4Class(SymbolTable parentSymbolTable, AstNode symbolTableScope) {
-        super(parentSymbolTable, symbolTableScope);
-    }
-
 }

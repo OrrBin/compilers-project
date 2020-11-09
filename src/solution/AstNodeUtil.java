@@ -55,7 +55,7 @@ public class AstNodeUtil {
 
     // region Variables
 
-    public VariableType findVariableType(VarDecl var) throws Exception {
+    public VariableType findVariableType(VariableIntroduction var) throws Exception {
         if (isLocal(var)) return VariableType.LOCAL;
         if (isParameter(var)) return VariableType.PARAMETER;
         if (isField(var)) return VariableType.FIELD;
@@ -69,7 +69,7 @@ public class AstNodeUtil {
         throw new Exception("Can't determine variable type");
     }
 
-    public boolean isLocal(VarDecl var){
+    public boolean isLocal(VariableIntroduction var){
         SymbolTable symbolTable = getEnclosingScope(var);
         if (symbolTable.symbolTableScope instanceof MethodDecl){
             return ((MethodDecl)symbolTable.symbolTableScope).vardecls().contains(var);
@@ -90,7 +90,7 @@ public class AstNodeUtil {
         return false;
     }
 
-    public boolean isParameter(VarDecl var) {
+    public boolean isParameter(VariableIntroduction var) {
         SymbolTable symbolTable = getEnclosingScope(var);
         if (symbolTable.symbolTableScope instanceof MethodDecl) {
             return ((MethodDecl)symbolTable.symbolTableScope).formals().contains(var);
@@ -111,7 +111,7 @@ public class AstNodeUtil {
         return false;
     }
 
-    public boolean isField(VarDecl var){
+    public boolean isField(VariableIntroduction var){
         return !isLocal(var) && !isParameter(var);
     }
 

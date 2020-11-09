@@ -1,10 +1,6 @@
 package solution;
 
-import ast.AstNode;
-import ast.ClassDecl;
-import ast.MethodDecl;
-import ast.Program;
-import ast.VarDecl;
+import ast.*;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.visitors.RenameFieldVariableVisitor;
@@ -36,7 +32,7 @@ public class Renamer {
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        VariableIntroduction var = crawler.findByLineNumber(op.originalLine, VariableIntroduction.class);
         VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:

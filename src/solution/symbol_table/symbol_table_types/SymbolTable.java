@@ -6,15 +6,17 @@ import solution.symbol_table.symbol_types.Symbol;
 import java.util.HashMap;
 import java.util.Map;
 
-public  class SymbolTable {
+public abstract class SymbolTable {
     public Map<String, Symbol> entries;
     public SymbolTable parentSymbolTable;
     public AstNode symbolTableScope;
+    public int scopeStartingLine;
 
 
     public SymbolTable(AstNode symbolTableScope)
     {
         this.symbolTableScope = symbolTableScope;
+        this.scopeStartingLine = symbolTableScope.lineNumber;
         entries = new HashMap<>();
     }
 

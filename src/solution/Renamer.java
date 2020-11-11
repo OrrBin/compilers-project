@@ -6,10 +6,12 @@ import ast.FormalArg;
 import ast.MethodDecl;
 import ast.Program;
 import ast.VarDecl;
+import ast.VariableIntroduction;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.visitors.RenameFieldVariableVisitor;
 import solution.visitors.RenameLocalVariableVisitor;
+import solution.visitors.RenameMethodVisitor;
 import solution.visitors.RenameParameterVisitor;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class Renamer {
     private ProgramCrawler crawler;
     private List<RenameOp<?>> renameOps;
 
-    public Renamer(Program prog, AstNodeUtil astNodeUtil, ProgramCrawler crawler) {
+    public Renamer(Program prog, AstNodeUtil astNodeUtil) {
         this.prog = prog;
         this.crawler = new NaiveProgramCrawler(prog);
         this.astNodeUtil = astNodeUtil;
@@ -34,12 +36,11 @@ public class Renamer {
         } else {
             renameVariable(op);
         }
-
         executeRenameOps(renameOps);
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        VariableIntroduction var = crawler.findByLineNumber(op.originalLine, VariableIntroduction.class);
         VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:
@@ -95,6 +96,17 @@ public class Renamer {
     }
 
     public void renameMethod(RenameOpParams op) {
+        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
+        ClassDecl clazz = astNodeUtil.getClassDeclaration(method); // will find the super class
+
+        List<ClassDecl> classes = new ArrayList<>();
+        classes.add(clazz);
+        classes.addAll(astNodeUtil.getExtendingClasses(clazz));
+        RenameMethodVisitor visitor = new RenameMethodVisitor(op, renameOps);
+
+        for (ClassDecl classDecl : classes) {
+            classDecl.accept(visitor);
+        }
     }
 
 

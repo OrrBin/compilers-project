@@ -11,7 +11,6 @@ import java.util.List;
 
 public class RenameFieldVariableVisitor extends RenameVariableVisitor {
 
-    private RenameOpParams op;
     private AstNodeUtil astNodeUtil;
 
     public RenameFieldVariableVisitor(RenameOpParams op, List<RenameOp<?>> renameOps, AstNodeUtil astNodeUtil) {

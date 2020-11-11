@@ -4,7 +4,7 @@ import ast.*;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AstNodeUtil {
@@ -17,25 +17,25 @@ public class AstNodeUtil {
 
     // region General
 
-    public MethodDecl getMethod(AstNode astNode){
+    public MethodDecl getMethod(AstNode astNode) {
         SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(astNode);
-        AstNode node  = symbolTable.symbolTableScope;
+        AstNode node = symbolTable.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
             throw new RuntimeException("table.symbolTableScope expected to be of type MethodDecl but was of type : " + node.getClass());
         }
-        return (MethodDecl)node;
+        return (MethodDecl) node;
     }
 
-    public ClassDecl getClassDeclaration(AstNode astNode){
+    public ClassDecl getClassDeclaration(AstNode astNode) {
         SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(astNode);
-        while (!(symbolTable.symbolTableScope instanceof ClassDecl)){
+        while (!(symbolTable.symbolTableScope instanceof ClassDecl)) {
             symbolTable = symbolTable.parentSymbolTable;
-            if (symbolTable == null){
+            if (symbolTable == null) {
                 throw new RuntimeException("Couln't find symbolTableScope of ClassDecl for node of type: " + astNode.getClass());
             }
         }
 
-        return (ClassDecl)symbolTable.symbolTableScope;
+        return (ClassDecl) symbolTable.symbolTableScope;
     }
 
     public SymbolTable getEnclosingScope(AstNode astNode) {
@@ -47,15 +47,15 @@ public class AstNodeUtil {
     // region Classes
 
     public List<ClassDecl> getExtendingClasses(ClassDecl classDecl) {
-        SymbolTable4Class rootSymbolTable = (SymbolTable4Class)getEnclosingScope(classDecl);
-        return rootSymbolTable.childrenSymbolTables.stream().map(symbolTable -> (ClassDecl)symbolTable.symbolTableScope).collect(Collectors.toList());
+        SymbolTable4Class rootSymbolTable = (SymbolTable4Class) getEnclosingScope(classDecl);
+        return rootSymbolTable.childrenSymbolTables.stream().map(symbolTable -> (ClassDecl) symbolTable.symbolTableScope).collect(Collectors.toList());
     }
 
     // endregion
 
     // region Variables
 
-    public VariableType findVariableType(VarDecl var) throws Exception {
+    public VariableType findVariableType(VariableIntroduction var) throws Exception {
         if (isLocal(var)) return VariableType.LOCAL;
         if (isParameter(var)) return VariableType.PARAMETER;
         if (isField(var)) return VariableType.FIELD;
@@ -69,10 +69,10 @@ public class AstNodeUtil {
         throw new Exception("Can't determine variable type");
     }
 
-    public boolean isLocal(VarDecl var){
+    public boolean isLocal(VariableIntroduction var) {
         SymbolTable symbolTable = getEnclosingScope(var);
-        if (symbolTable.symbolTableScope instanceof MethodDecl){
-            return ((MethodDecl)symbolTable.symbolTableScope).vardecls().contains(var);
+        if (symbolTable.symbolTableScope instanceof MethodDecl) {
+            return ((MethodDecl) symbolTable.symbolTableScope).vardecls().contains(var);
         } else {
             return false;
         }
@@ -90,10 +90,10 @@ public class AstNodeUtil {
         return false;
     }
 
-    public boolean isParameter(VarDecl var) {
+    public boolean isParameter(VariableIntroduction var) {
         SymbolTable symbolTable = getEnclosingScope(var);
         if (symbolTable.symbolTableScope instanceof MethodDecl) {
-            return ((MethodDecl)symbolTable.symbolTableScope).formals().contains(var);
+            return ((MethodDecl) symbolTable.symbolTableScope).formals().contains(var);
         } else {
             return false;
         }
@@ -111,12 +111,12 @@ public class AstNodeUtil {
         return false;
     }
 
-    public boolean isField(VarDecl var){
+    public boolean isField(VariableIntroduction var) {
         return !isLocal(var) && !isParameter(var);
     }
 
 
-    public boolean isField(IdentifierExpr var){
+    public boolean isField(IdentifierExpr var) {
         return !isLocal(var) && !isParameter(var);
     }
 
@@ -125,4 +125,50 @@ public class AstNodeUtil {
     // region Methods
     // endregion
 
-}
+
+    //region findByLineNumber
+    private AstNode findScopeByLineNumber(List<? extends AstNode> scopes, int lineNumber){
+        var tmpRetScope = scopes.get(0);
+        for(var curScope : scopes){
+
+            int curScopeLineNum = curScope.lineNumber;
+            int tmpScopeLineNum = tmpRetScope.lineNumber;
+
+            if(curScopeLineNum > tmpScopeLineNum && curScopeLineNum <= lineNumber) {
+                tmpRetScope = curScope;
+            }
+        }
+        return tmpRetScope;
+    }
+
+    private AstNode findSymbolNodeByLineNumber(SymbolTable classScopeSymbolTable, int lineNumber) {
+        var symbolsMap = classScopeSymbolTable.entries;
+        List<AstNode> symbolNodesList = new ArrayList<>();
+
+        //insert corresponding nodes of classSymbolTable symbols to symbolNodesList
+        symbolsMap.keySet().forEach(id-> symbolNodesList.add(symbolsMap.get(id).node));
+        return findScopeByLineNumber(symbolNodesList, lineNumber);
+
+    }
+
+    public AstNode findByLineNumber(Program program, int lineNumber){
+
+        //find class scope for lineNumber
+        List<ClassDecl> classes = program.classDecls();
+        var classScope = findScopeByLineNumber(classes, lineNumber);
+
+        //get classScope symbol table
+        SymbolTable classScopeSymbolTable = symbolTablesManager.getEnclosingScope(classScope);
+
+        //find symbol node from classScope symbol table for lineNumber
+        /* return AstNode can be:
+            methodDecl(for methods, formal args, local vars)
+            varDecl(for fields)
+         */
+        return findSymbolNodeByLineNumber(classScopeSymbolTable, lineNumber);
+    }
+
+    //endregion
+
+    }
+

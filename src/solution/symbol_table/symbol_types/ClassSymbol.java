@@ -4,10 +4,8 @@ import ast.ClassDecl;
 
 public class ClassSymbol extends Symbol {
     public ClassSymbol(ClassDecl classNode) {
+        super(classNode);
         id = classNode.name();
     }
 
-    public ClassSymbol(String id){
-        this.id = id;
-    }
 }

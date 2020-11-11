@@ -1,23 +1,33 @@
 package test;
 
+import ast.AstXMLSerializer;
+import ast.Program;
 import solution.AstNodeUtil;
 import solution.SymbolTablesManager;
+import solution.symbol_table.SymbolTableInitVisitor;
 
-public class AstNodeUtilTest {
+import java.io.File;
 
-    // TODO ask or how to init the Symbol Tables
+public abstract class AstNodeUtilTest {
+    protected static SymbolTablesManager symbolTablesManager = new SymbolTablesManager();
+    protected static AstNodeUtil astNodeUtil;
+    protected static Program prog;
+
+    private static String xmlFileName = "examples/ex1/field.java.xml";
+
     // TODO check if can add junit dependency
 
-    public AstNodeUtilTest(){
-
+    public AstNodeUtilTest(String xmlFileName) {
+        this.xmlFileName = xmlFileName;
     }
 
-    public static void getExtendingClassesTest(){
-        // astNodeUtil.getExtendingClasses();
-    }
+    public void init(){
+        astNodeUtil = new AstNodeUtil(symbolTablesManager);
 
-    public static void findVariableTypeTest(){
-        // astNodeUtil.findVariableType();
+        AstXMLSerializer xmlSerializer = new AstXMLSerializer();
+        prog = xmlSerializer.deserialize(new File(xmlFileName));
+
+        prog.accept(new SymbolTableInitVisitor(symbolTablesManager));
     }
 
 }

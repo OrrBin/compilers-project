@@ -6,6 +6,7 @@ import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
 import solution.symbol_table.symbol_table_types.SymbolTable4Method;
+import solution.symbol_table.symbol_table_types.SymbolTable4Prog;
 import solution.symbol_table.symbol_types.ClassSymbol;
 import solution.symbol_table.symbol_types.MethodSymbol;
 import solution.symbol_table.symbol_types.Symbol;
@@ -66,7 +67,7 @@ public class SymbolTableInitVisitor implements Visitor {
         //initializing name2AstNodeMap
         initName2ClassNode(program);
 
-        SymbolTable rootTable = new SymbolTable(program);
+        SymbolTable rootTable = new SymbolTable4Prog(program);
         symbolTablesManager.setEnclosingScope(program, rootTable);
 
         //update curScopeStack
@@ -74,7 +75,7 @@ public class SymbolTableInitVisitor implements Visitor {
 
         //Adding main class to rootTable
         MainClass mainClass = program.mainClass();
-        Symbol mainClassSymbol = new ClassSymbol(mainClass.name());
+        Symbol mainClassSymbol = new Symbol(mainClass);
         rootTable.addSymbol2Table(mainClassSymbol);
         mainClass.accept(this);
 

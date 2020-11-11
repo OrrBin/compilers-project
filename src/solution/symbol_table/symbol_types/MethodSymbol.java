@@ -9,6 +9,7 @@ public class MethodSymbol extends Symbol {
     public String outputDecl;
 
     public MethodSymbol(MethodDecl methodNode){
+        super(methodNode);
         id = methodNode.name();
     }
 

@@ -5,8 +5,13 @@ import solution.VariableType;
 
 import java.util.List;
 
-public abstract class Symbol {
+public class Symbol {
     public String id;
+    public AstNode node;
 
+
+    public Symbol(AstNode astNode) {
+        this.node = astNode;
+    }
 }
 

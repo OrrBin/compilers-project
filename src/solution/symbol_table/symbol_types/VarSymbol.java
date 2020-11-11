@@ -8,7 +8,7 @@ public class VarSymbol extends Symbol {
     public VariableType kind;
 
     public VarSymbol(VariableIntroduction varNode, VariableType varType) {
-
+        super(varNode);
         id= varNode.name();
         decl = varNode.type().toString();
         this.kind = varType;

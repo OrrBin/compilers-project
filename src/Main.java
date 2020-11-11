@@ -1,4 +1,8 @@
 import ast.*;
+import solution.AstNodeUtil;
+import solution.RenameOpParams;
+import solution.Renamer;
+import solution.SymbolTablesManager;
 
 import java.io.*;
 
@@ -52,8 +56,13 @@ public class Main {
                     } else {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
-//                    Renamer renamer = new Renamer(prog);
-//                    renamer.rename(new RenameOp(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
+
+
+                    SymbolTablesManager manager = new SymbolTablesManager(prog);
+                    AstNodeUtil util = new AstNodeUtil(manager);
+                    Renamer renamer = new Renamer(prog, util);
+                    renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
+
                     throw new UnsupportedOperationException("TODO - Ex. 1");
 
                 } else {

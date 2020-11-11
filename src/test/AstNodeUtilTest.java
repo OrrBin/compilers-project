@@ -5,9 +5,6 @@ import solution.SymbolTablesManager;
 
 public class AstNodeUtilTest {
 
-    public static SymbolTablesManager symbolTablesManager = new SymbolTablesManager();
-    public static AstNodeUtil astNodeUtil = new AstNodeUtil(symbolTablesManager);
-
     // TODO ask or how to init the Symbol Tables
     // TODO check if can add junit dependency
 

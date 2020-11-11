@@ -1,6 +1,8 @@
 package solution;
 
 import ast.AstNode;
+import ast.Program;
+import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 
 import java.util.HashMap;
@@ -12,6 +14,11 @@ import java.util.Map;
 public class SymbolTablesManager {
 
     Map<AstNode, SymbolTable> ast2SymbolicTable = new HashMap<>();
+
+    public SymbolTablesManager(Program program) {
+        SymbolTableInitVisitor visitor = new SymbolTableInitVisitor(this);
+        program.accept(visitor);
+    }
 
     /**
      * get reference to symbol table of enclosing scope

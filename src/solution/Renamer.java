@@ -2,6 +2,7 @@ package solution;
 
 import ast.AstNode;
 import ast.ClassDecl;
+import ast.FormalArg;
 import ast.MethodDecl;
 import ast.Program;
 import ast.VarDecl;
@@ -21,9 +22,9 @@ public class Renamer {
     private ProgramCrawler crawler;
     private List<RenameOp<?>> renameOps;
 
-    public Renamer(Program prog, AstNodeUtil astNodeUtil) {
+    public Renamer(Program prog, AstNodeUtil astNodeUtil, ProgramCrawler crawler) {
         this.prog = prog;
-//        this.crawler = new ProgramCrawler(prog);
+        this.crawler = new NaiveProgramCrawler(prog);
         this.astNodeUtil = astNodeUtil;
     }
 
@@ -33,6 +34,8 @@ public class Renamer {
         } else {
             renameVariable(op);
         }
+
+        executeRenameOps(renameOps);
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
@@ -65,7 +68,7 @@ public class Renamer {
     }
 
     private void renameParameter(RenameOpParams op) throws Exception {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        FormalArg var = crawler.findByLineNumber(op.originalLine, FormalArg.class);
         SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {

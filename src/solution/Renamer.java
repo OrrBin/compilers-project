@@ -5,6 +5,7 @@ import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.visitors.RenameFieldVariableVisitor;
 import solution.visitors.RenameLocalVariableVisitor;
+import solution.visitors.RenameMethodVisitor;
 import solution.visitors.RenameParameterVisitor;
 
 import java.util.ArrayList;
@@ -88,6 +89,17 @@ public class Renamer {
     }
 
     public void renameMethod(RenameOpParams op) {
+        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
+        ClassDecl clazz = astNodeUtil.getClassDeclaration(method); // will find the super class
+
+        List<ClassDecl> classes = new ArrayList<>();
+        classes.add(clazz);
+        classes.addAll(astNodeUtil.getExtendingClasses(clazz));
+        RenameMethodVisitor visitor = new RenameMethodVisitor(op, renameOps);
+
+        for (ClassDecl classDecl : classes) {
+            classDecl.accept(visitor);
+        }
     }
 
 

@@ -3,6 +3,7 @@ import solution.AstNodeUtil;
 import solution.RenameOpParams;
 import solution.Renamer;
 import solution.SymbolTablesManager;
+import solution.symbol_table.SymbolTableInitVisitor;
 
 import java.io.*;
 
@@ -58,7 +59,8 @@ public class Main {
                     }
 
 
-                    SymbolTablesManager manager = new SymbolTablesManager(prog);
+                    SymbolTablesManager manager = new SymbolTablesManager();
+                    prog.accept(new SymbolTableInitVisitor(manager));
                     AstNodeUtil util = new AstNodeUtil(manager);
                     Renamer renamer = new Renamer(prog, util);
                     renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));

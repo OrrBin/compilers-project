@@ -15,11 +15,6 @@ public class SymbolTablesManager {
 
     Map<AstNode, SymbolTable> ast2SymbolicTable = new HashMap<>();
 
-    public SymbolTablesManager(Program program) {
-        SymbolTableInitVisitor visitor = new SymbolTableInitVisitor(this);
-        program.accept(visitor);
-    }
-
     /**
      * get reference to symbol table of enclosing scope
      **/

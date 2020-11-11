@@ -30,7 +30,6 @@ public class AstNodeUtilTest_BS extends AstNodeUtilTest{
 
     public static void main(String[] args) {
         AstNodeUtilTest_BS astNodeUtilTestBS = new AstNodeUtilTest_BS(xmlFileName);
-        astNodeUtilTestBS.init();
 
         astNodeUtilTestBS.getExtendingClassesTest();
         System.out.println("Test1 passed");

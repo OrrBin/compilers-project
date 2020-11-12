@@ -1,6 +1,12 @@
 package solution;
 
-import ast.*;
+import ast.AstNode;
+import ast.ClassDecl;
+import ast.FormalArg;
+import ast.MethodDecl;
+import ast.Program;
+import ast.VarDecl;
+import ast.VariableIntroduction;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.visitors.RenameFieldVariableVisitor;
@@ -30,6 +36,7 @@ public class Renamer {
         } else {
             renameVariable(op);
         }
+        executeRenameOps(renameOps);
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {

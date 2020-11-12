@@ -1,6 +1,8 @@
 package solution;
 
 import ast.AstNode;
+import ast.Program;
+import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 
 import java.util.HashMap;

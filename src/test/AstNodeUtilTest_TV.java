@@ -44,7 +44,6 @@ public class AstNodeUtilTest_TV extends AstNodeUtilTest{
 
     public static void main(String[] args) throws Exception {
         AstNodeUtilTest_TV astNodeUtilTestTV = new AstNodeUtilTest_TV(xmlFileName);
-        astNodeUtilTestTV.init();
 
         astNodeUtilTestTV.findVariableTypeTest();
         System.out.println("Test1 passed");

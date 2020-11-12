@@ -9,25 +9,21 @@ import solution.symbol_table.SymbolTableInitVisitor;
 import java.io.File;
 
 public abstract class AstNodeUtilTest {
-    protected static SymbolTablesManager symbolTablesManager = new SymbolTablesManager();
-    protected static AstNodeUtil astNodeUtil;
-    protected static Program prog;
+    protected SymbolTablesManager symbolTablesManager;
+    protected AstNodeUtil astNodeUtil;
+    protected Program prog;
 
-    private static String xmlFileName = "examples/ex1/field.java.xml";
+    private String xmlFileName = "examples/ex1/field.java.xml";
 
     // TODO check if can add junit dependency
 
     public AstNodeUtilTest(String xmlFileName) {
         this.xmlFileName = xmlFileName;
-    }
-
-    public void init(){
-        astNodeUtil = new AstNodeUtil(symbolTablesManager);
-
         AstXMLSerializer xmlSerializer = new AstXMLSerializer();
         prog = xmlSerializer.deserialize(new File(xmlFileName));
-
+        symbolTablesManager = new SymbolTablesManager();
         prog.accept(new SymbolTableInitVisitor(symbolTablesManager));
-    }
+        astNodeUtil = new AstNodeUtil(symbolTablesManager);
 
+    }
 }

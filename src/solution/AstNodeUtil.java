@@ -126,49 +126,96 @@ public class AstNodeUtil {
     // endregion
 
 
+//    //region findByLineNumber
+//
+//    private AstNode findScopeByLineNumber(List<? extends AstNode> scopes, int lineNumber) {
+//        var tmpRetScope = scopes.get(0);
+//        for (var curScope : scopes) {
+//
+//            int curScopeLineNum = curScope.lineNumber;
+//            int tmpScopeLineNum = tmpRetScope.lineNumber;
+//
+//            if (curScopeLineNum > tmpScopeLineNum && curScopeLineNum <= lineNumber) {
+//                tmpRetScope = curScope;
+//            }
+//        }
+//        return tmpRetScope;
+//    }
+//
+//    private AstNode findSymbolNodeByLineNumber(SymbolTable classScopeSymbolTable, int lineNumber) {
+//        var symbolsMap = classScopeSymbolTable.entries;
+//        List<AstNode> symbolNodesList = new ArrayList<>();
+//
+//        //insert corresponding nodes of classSymbolTable symbols to symbolNodesList
+//        symbolsMap.keySet().forEach(id -> symbolNodesList.add(symbolsMap.get(id).node));
+//        return findScopeByLineNumber(symbolNodesList, lineNumber);
+//
+//    }
+//
+//    public AstNode findByLineNumber(Program program, int lineNumber) {
+//
+//        //find class scope for lineNumber
+//        List<ClassDecl> classes = program.classDecls();
+//        var classScope = findScopeByLineNumber(classes, lineNumber);
+//
+//        //get classScope symbol table
+//        SymbolTable classScopeSymbolTable = symbolTablesManager.getEnclosingScope(classScope);
+//
+//        //find symbol node from classScope symbol table for lineNumber
+//        /* return AstNode can be:
+//            methodDecl(for methods, formal args, local vars)
+//            varDecl(for fields)
+//         */
+//        return findSymbolNodeByLineNumber(classScopeSymbolTable, lineNumber);
+//    }
+//
+//    //endregion
+
     //region findByLineNumber
-    private AstNode findScopeByLineNumber(List<? extends AstNode> scopes, int lineNumber){
-        var tmpRetScope = scopes.get(0);
-        for(var curScope : scopes){
 
-            int curScopeLineNum = curScope.lineNumber;
-            int tmpScopeLineNum = tmpRetScope.lineNumber;
+    boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber) {
+        var nodeLineNum = nodeToCheck.lineNumber;
+        return (nodeLineNum != null) && (nodeLineNum == lineNumber);
+    }
 
-            if(curScopeLineNum > tmpScopeLineNum && curScopeLineNum <= lineNumber) {
-                tmpRetScope = curScope;
+    //if retVal == null then program input is incorrect
+    public AstNode findByLineNumber(Program program, int lineNumber) {
+        List<ClassDecl> classes = program.classDecls();
+
+        //go over all program classes' symbol tables
+        for (var c : classes) {
+
+            SymbolTable cSymbolTable = symbolTablesManager.getEnclosingScope(c);
+            var cSymTableEntries = cSymbolTable.entries;
+            var cSymbolsKeySet = cSymTableEntries.keySet();
+
+            // go over all symbols in class symbol table
+            for (var symbol : cSymbolsKeySet) {
+                AstNode cSymbolNode = cSymTableEntries.get(symbol).node;
+
+                //check for field or method
+                if (nodeFoundByLineNum(cSymbolNode, lineNumber)) {
+                    return cSymbolNode;
+                }
+
+                //check for formal arg/ local inside a method
+                else if (cSymbolNode.getClass() == MethodDecl.class) {
+
+                    SymbolTable mSymbolTable = symbolTablesManager.getEnclosingScope(cSymbolNode);
+                    var mSymTableEntries = mSymbolTable.entries;
+                    var mSymbolsKeySet = mSymTableEntries.keySet();
+
+                    //go over all symbols in method symbol table
+                    for (var symbolInMethod : mSymbolsKeySet) {
+                        AstNode mSymbolNode = mSymTableEntries.get(symbolInMethod).node;
+                        if(nodeFoundByLineNum(mSymbolNode, lineNumber)) {return mSymbolNode;}
+                    }
+                }
             }
         }
-        return tmpRetScope;
+
+        //if we're here then the program input is incorrect
+        return null;
     }
-
-    private AstNode findSymbolNodeByLineNumber(SymbolTable classScopeSymbolTable, int lineNumber) {
-        var symbolsMap = classScopeSymbolTable.entries;
-        List<AstNode> symbolNodesList = new ArrayList<>();
-
-        //insert corresponding nodes of classSymbolTable symbols to symbolNodesList
-        symbolsMap.keySet().forEach(id-> symbolNodesList.add(symbolsMap.get(id).node));
-        return findScopeByLineNumber(symbolNodesList, lineNumber);
-
-    }
-
-    public AstNode findByLineNumber(Program program, int lineNumber){
-
-        //find class scope for lineNumber
-        List<ClassDecl> classes = program.classDecls();
-        var classScope = findScopeByLineNumber(classes, lineNumber);
-
-        //get classScope symbol table
-        SymbolTable classScopeSymbolTable = symbolTablesManager.getEnclosingScope(classScope);
-
-        //find symbol node from classScope symbol table for lineNumber
-        /* return AstNode can be:
-            methodDecl(for methods, formal args, local vars)
-            varDecl(for fields)
-         */
-        return findSymbolNodeByLineNumber(classScopeSymbolTable, lineNumber);
-    }
-
-    //endregion
-
-    }
+}
 

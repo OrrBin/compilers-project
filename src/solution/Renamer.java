@@ -49,7 +49,8 @@ public class Renamer {
     }
 
     private void renameLocal(RenameOpParams op) throws Exception {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+//         VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
         SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
@@ -62,7 +63,8 @@ public class Renamer {
     }
 
     private void renameParameter(RenameOpParams op) throws Exception {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+//        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
         SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
@@ -75,7 +77,8 @@ public class Renamer {
     }
 
     private void renameField(RenameOpParams op) {
-        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+//        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
         ClassDecl clazz = astNodeUtil.getClassDeclaration(var); // will find the super class
 
         List<ClassDecl> classes = new ArrayList<>();
@@ -89,7 +92,8 @@ public class Renamer {
     }
 
     public void renameMethod(RenameOpParams op) {
-        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
+//        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
+        AstNode method = astNodeUtil.findByLineNumber(prog, op.originalLine);
         ClassDecl clazz = astNodeUtil.getClassDeclaration(method); // will find the super class
 
         List<ClassDecl> classes = new ArrayList<>();

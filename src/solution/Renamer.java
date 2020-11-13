@@ -41,7 +41,7 @@ public class Renamer {
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VarDecl var = (VarDecl) astNodeUtil.findByLineNumber(prog, op.originalLine);
+        VariableIntroduction var = (VariableIntroduction) astNodeUtil.findByLineNumber(prog, op.originalLine);
         VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:

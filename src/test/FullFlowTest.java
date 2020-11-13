@@ -67,6 +67,7 @@ public class FullFlowTest {
                 String expected = astPrintVisitor2.getString();
 
                 System.out.println(real);
+                System.out.println("////////////////////////////////////////////////////////////");
                 System.out.println(expected);
                 assert real.equals(expected);
 

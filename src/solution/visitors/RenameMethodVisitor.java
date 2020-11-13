@@ -1,10 +1,12 @@
 package solution.visitors;
 
 import ast.*;
+import solution.AstNodeUtil;
 import solution.RenameOpParams;
 import solution.actions.MethodCallRenameOp;
 import solution.actions.MethodDeclRenameOp;
 import solution.actions.RenameOp;
+import solution.symbol_table.symbol_table_types.SymbolTable;
 
 import java.util.List;
 
@@ -13,10 +15,14 @@ public class RenameMethodVisitor implements Visitor {
 
     protected RenameOpParams op;
     protected List<RenameOp<?>> renameOps;
+    protected ClassDecl methodClassScope;
+    protected AstNodeUtil util;
 
-    public RenameMethodVisitor(RenameOpParams op, List<RenameOp<?>> renameOps) {
+    public RenameMethodVisitor(RenameOpParams op, List<RenameOp<?>> renameOps, ClassDecl scope, AstNodeUtil util) {
         this.op = op;
         this.renameOps = renameOps;
+        this.methodClassScope = scope;
+        this.util = util;
     }
 
     @Override
@@ -31,12 +37,17 @@ public class RenameMethodVisitor implements Visitor {
 
     @Override
     public void visit(MainClass mainClass) {
-        // No need to implement
+        mainClass.mainStatement().accept(this);
     }
 
     @Override
     public void visit(MethodDecl methodDecl) {
-        renameOps.add(new MethodDeclRenameOp(op,methodDecl));
+        if(methodDecl.name().equals(op.originalName)) {
+            renameOps.add(new MethodDeclRenameOp(op, methodDecl));
+        }
+
+        methodDecl.body().forEach(statement -> statement.accept(this));
+        methodDecl.ret().accept(this);
     }
 
     @Override
@@ -128,7 +139,13 @@ public class RenameMethodVisitor implements Visitor {
 
     @Override
     public void visit(MethodCallExpr e) {
-        renameOps.add(new MethodCallRenameOp(op,e));
+
+        SymbolTable table = util.getEnclosingScope(e);
+        ClassDecl scope = (ClassDecl) table.symbolTableScope;
+        String className = scope.name();
+        if(className.equals(this.methodClassScope.name()) && e.methodId().equals(op.originalName)) {
+            renameOps.add(new MethodCallRenameOp(op, e));
+        }
     }
 
     @Override

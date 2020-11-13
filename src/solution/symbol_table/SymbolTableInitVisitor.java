@@ -1,6 +1,7 @@
 package solution.symbol_table;
 
 import ast.*;
+import com.sun.xml.bind.v2.model.core.Ref;
 import solution.SymbolTablesManager;
 import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
@@ -73,19 +74,19 @@ public class SymbolTableInitVisitor implements Visitor {
         //update curScopeStack
         curScopeStack.push(program);
 
-        //Adding main class to rootTable
-        MainClass mainClass = program.mainClass();
-        Symbol mainClassSymbol = new Symbol(mainClass);
-        rootTable.addSymbol2Table(mainClassSymbol);
-        mainClass.accept(this);
-
         for (ClassDecl c : program.classDecls()) {
 
             //Adding all program classes to rootTable
             Symbol classSymbol = new ClassSymbol(c);
             rootTable.addSymbol2Table(classSymbol);
-               c.accept(this);
+            c.accept(this);
         }
+
+        //Adding main class to rootTable
+        MainClass mainClass = program.mainClass();
+        Symbol mainClassSymbol = new Symbol(mainClass);
+        rootTable.addSymbol2Table(mainClassSymbol);
+        mainClass.accept(this);
     }
 
     @Override
@@ -319,9 +320,54 @@ public class SymbolTableInitVisitor implements Visitor {
 
     @Override
     public void visit(MethodCallExpr e) {
-        updateManager4NonDeclScopeAstNodes(e);
 
         Expr ownerExpr = e.ownerExpr();
+        if(ownerExpr instanceof NewObjectExpr) {
+            String className = ((NewObjectExpr) ownerExpr).classId();
+            var declScope = name2AstNodeMap.get(className);
+            SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
+            symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
+        }
+        else if (ownerExpr instanceof ThisExpr) {
+            updateManager4NonDeclScopeAstNodes(e);
+        }
+        else if(ownerExpr instanceof IdentifierExpr) {
+            IdentifierExpr identifierExpr = (IdentifierExpr) ownerExpr;
+//            SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(identifierExpr);
+//            MethodDecl method = (MethodDecl) symbolTable.symbolTableScope;
+            MethodDecl method = (MethodDecl) curScopeStack.lastElement();
+            SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(method);
+            if(method.vardecls().stream().anyMatch(varDecl -> varDecl.name().equals(identifierExpr.id()))) { // Owner is local variable
+                VarDecl var = method.vardecls().stream().filter(varDecl -> varDecl.name().equals(identifierExpr.id())).findFirst().get();
+                RefType type = (RefType) var.type();
+                String className = type.id();
+                var declScope = name2AstNodeMap.get(className);
+                SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
+                symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
+            } else if (method.formals().stream().anyMatch(formalArg -> formalArg.name().equals(identifierExpr.id()))) { // Owner is Formal parameter
+                FormalArg var = method.formals().stream().filter(formalArg -> formalArg.name().equals(identifierExpr.id())).findFirst().get();
+                RefType type = (RefType) var.type();
+                String className = type.id();
+                var declScope = name2AstNodeMap.get(className);
+                SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
+                symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
+            } else { // Owner is Field
+                SymbolTable classSymbolTable = symbolTable.parentSymbolTable;
+                while(classSymbolTable != null) {
+                    ClassDecl classDecl = (ClassDecl) classSymbolTable.symbolTableScope;
+                    if(classDecl.fields().stream().anyMatch(varDecl -> varDecl.name().equals(identifierExpr.id()))) {
+                        var declScope = name2AstNodeMap.get(classDecl.name());
+                        SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
+                        symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
+                        break;
+                    }
+
+                    classSymbolTable = classSymbolTable.parentSymbolTable;
+                }
+            }
+
+        }
+
         if(ownerExpr != null) {ownerExpr.accept(this);}
 
         for(Expr actual : e.actuals()){

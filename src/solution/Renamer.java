@@ -107,11 +107,13 @@ public class Renamer {
         List<ClassDecl> classes = new ArrayList<>();
         classes.add(clazz);
         classes.addAll(astNodeUtil.getExtendingClasses(clazz));
-        RenameMethodVisitor visitor = new RenameMethodVisitor(op, renameOps);
+        RenameMethodVisitor visitor = new RenameMethodVisitor(op, renameOps, clazz, astNodeUtil);
 
         for (ClassDecl classDecl : classes) {
             classDecl.accept(visitor);
         }
+
+        prog.mainClass().accept(visitor);
     }
 
 

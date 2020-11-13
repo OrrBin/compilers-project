@@ -40,7 +40,7 @@ public class Renamer {
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VariableIntroduction var = crawler.findByLineNumber(op.originalLine, VariableIntroduction.class);
+        VarDecl var = (VarDecl) astNodeUtil.findByLineNumber(prog, op.originalLine);
         VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:

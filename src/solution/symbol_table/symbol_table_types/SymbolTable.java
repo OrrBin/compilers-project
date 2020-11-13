@@ -10,13 +10,11 @@ public abstract class SymbolTable {
     public Map<String, Symbol> entries;
     public SymbolTable parentSymbolTable;
     public AstNode symbolTableScope;
-    public int scopeStartingLine;
 
 
     public SymbolTable(AstNode symbolTableScope)
     {
         this.symbolTableScope = symbolTableScope;
-        this.scopeStartingLine = symbolTableScope.lineNumber;
         entries = new HashMap<>();
     }
 

@@ -20,7 +20,6 @@ public class FullFlowTest {
     public static void main(String[] args) {
         try {
             var inputMethod = args[0];
-            var action = args[1];
             var filenameExpected = args[args.length - 3];
             var filename = args[args.length - 2];
             var outfilename = args[args.length - 1];

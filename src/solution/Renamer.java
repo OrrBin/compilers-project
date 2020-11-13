@@ -28,6 +28,7 @@ public class Renamer {
         this.prog = prog;
 //        this.crawler = new ProgramCrawler(prog);
         this.astNodeUtil = astNodeUtil;
+        this.renameOps = new ArrayList<>();
     }
 
     public void rename(RenameOpParams op) throws Exception {

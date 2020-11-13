@@ -260,30 +260,39 @@ public class SymbolTableInitVisitor implements Visitor {
 
     @Override
     public void visit(AndExpr e) {
-
+        e.e1().accept(this);
+        e.e2().accept(this);
         updateManager4NonDeclScopeAstNodes(e);
     }
 
     @Override
     public void visit(LtExpr e) {
+        e.e1().accept(this);
+        e.e2().accept(this);
         updateManager4NonDeclScopeAstNodes(e);
 
     }
 
     @Override
     public void visit(AddExpr e) {
+        e.e1().accept(this);
+        e.e2().accept(this);
         updateManager4NonDeclScopeAstNodes(e);
 
     }
 
     @Override
     public void visit(SubtractExpr e) {
+        e.e1().accept(this);
+        e.e2().accept(this);
         updateManager4NonDeclScopeAstNodes(e);
 
     }
 
     @Override
     public void visit(MultExpr e) {
+        e.e1().accept(this);
+        e.e2().accept(this);
         updateManager4NonDeclScopeAstNodes(e);
 
     }

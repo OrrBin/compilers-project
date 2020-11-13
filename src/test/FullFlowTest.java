@@ -56,17 +56,23 @@ public class FullFlowTest {
                 AstNodeUtil util = new AstNodeUtil(manager);
                 Renamer renamer = new Renamer(prog, util);
                 renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
+
+                //
                 AstPrintVisitor astPrintVisitor = new AstPrintVisitor();
                 prog.accept(astPrintVisitor);
-                String real = astPrintVisitor.toString();
+                String real = astPrintVisitor.getString();
 
                 AstPrintVisitor astPrintVisitor2 = new AstPrintVisitor();
                 progExpected.accept(astPrintVisitor2);
-                String expected = astPrintVisitor2.toString();
+                String expected = astPrintVisitor2.getString();
 
                 System.out.println(real);
                 System.out.println(expected);
                 assert real.equals(expected);
+
+
+
+                System.out.println("Test Passed");
 
             } finally {
                 outFile.flush();

@@ -46,9 +46,20 @@ public class AstNodeUtil {
 
     // region Classes
 
-    public List<ClassDecl> getExtendingClasses(ClassDecl classDecl) {
+    private List<ClassDecl> getExtendingClassesHelper(ClassDecl classDecl) {
+        List<ClassDecl> extendingClasses = new ArrayList<>();
+        extendingClasses.add(classDecl);
         SymbolTable4Class rootSymbolTable = (SymbolTable4Class) getEnclosingScope(classDecl);
-        return rootSymbolTable.childrenSymbolTables.stream().map(symbolTable -> (ClassDecl) symbolTable.symbolTableScope).collect(Collectors.toList());
+        for (SymbolTable symbolTable : rootSymbolTable.childrenSymbolTables){
+            extendingClasses.addAll(getExtendingClassesHelper((ClassDecl) symbolTable.symbolTableScope));
+        }
+        return extendingClasses;
+    }
+
+    public List<ClassDecl> getExtendingClasses(ClassDecl classDecl) {
+        List<ClassDecl> extendingClasses = getExtendingClassesHelper(classDecl);
+        extendingClasses.remove(classDecl);
+        return extendingClasses;
     }
 
     // endregion

@@ -48,7 +48,7 @@ public class RenameMethodVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
-        if(methodDecl.name().equals(op.originalName)) {
+        if(family.contains(util.getClassDeclaration(methodDecl)) && methodDecl.name().equals(op.originalName)) {
             renameOps.add(new MethodDeclRenameOp(op, methodDecl));
         }
 
@@ -146,7 +146,7 @@ public class RenameMethodVisitor implements Visitor {
     @Override
     public void visit(MethodCallExpr e) {
         SymbolTable table = util.getEnclosingScope(e);
-        if (table==null) return;
+        //if (table==null) return;
         ClassDecl scope = (ClassDecl) table.symbolTableScope;
         if(family.contains(scope) && e.methodId().equals(op.originalName)) {
             renameOps.add(new MethodCallRenameOp(op, e));

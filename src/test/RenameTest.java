@@ -20,12 +20,29 @@ import java.util.stream.Collectors;
 public class RenameTest {
 
     public static void main(String[] args) {
-        var filename = "examples/ex1/method.java.xml";
-        var outFileName = "examples/ex1/method_renamed_res.java.xml";
+//        var filename = "examples/ex1/method.java.xml";
+//        var outFileName = "examples/ex1/method_renamed_res.java.xml";
+
+//        var filename = "examples/ex1/method.java.xml";
+//        var outFileName = "examples/ex1/method_renamed_res.java.xml";
+//        var type = "var";
+//        var originalName = "e";
+//        var originalLine = 10;
+//        var newName = "OR_HABAT";
+
+//        var filename = "examples/ex1/field.java.xml";
+//        var outFileName = "examples/ex1/field_renamed_res.java.xml";
+//        var type = "var";
+//        var originalName = "x";
+//        var originalLine = 17;
+//        var newName = "OR_HABAT";
+
+        var filename = "examples/ast/Factorial.java.xml";
+        var outFileName = "examples/ast/Factorial_renamed_res.java.xml";
         var type = "method";
-        var originalName = "run";
-        var originalLine = 13;
-        var newName = "flee";
+        var originalName = "ComputeFac";
+        var originalLine = 19;
+        var newName = "OR_HABAT";
 
         testRename(filename, outFileName, type, originalName, originalLine, newName);
     }
@@ -89,7 +106,7 @@ public class RenameTest {
                         }
                     }
                     String whitespace = " ".repeat(maxLineLength - lineLength);
-                    System.out.println(String.format("%02d", i) + ". " + originalLines.get(i) + whitespace + "   |   " + renamedLines.get(i));
+                    System.out.println(String.format("%02d", i+1) + ". " + originalLines.get(i) + whitespace + "   |   " + renamedLines.get(i));
                 }
 
 

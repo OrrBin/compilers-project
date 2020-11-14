@@ -165,6 +165,7 @@ public abstract class RenameVariableVisitor implements Visitor {
     public void visit(MethodCallExpr e) {
         // actuals are the parameters for the method arguments
         e.actuals().forEach(actual -> actual.accept(this));
+        e.ownerExpr().accept(this);
     }
 
     @Override
@@ -182,6 +183,9 @@ public abstract class RenameVariableVisitor implements Visitor {
         // No need for action
     }
 
+    /**
+     * If name matches, we can replace because we are in the lowest scope - Local
+     */
     @Override
     public void visit(IdentifierExpr e) {
         if (e.id().equals(op.originalName))

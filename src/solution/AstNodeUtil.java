@@ -226,7 +226,7 @@ public class AstNodeUtil {
         }
 
         //if we're here then the program input is incorrect
-        return null;
+        throw new IllegalArgumentException("probably no line number");
     }
 }
 

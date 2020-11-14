@@ -329,12 +329,14 @@ public class SymbolTableInitVisitor implements Visitor {
             symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
         }
         else if (ownerExpr instanceof ThisExpr) {
-            updateManager4NonDeclScopeAstNodes(e);
+            MethodDecl method = (MethodDecl) curScopeStack.lastElement();
+            SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(method);
+            SymbolTable classSymbolTable = symbolTable.parentSymbolTable;
+            SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(classSymbolTable.symbolTableScope);
+            symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
         }
         else if(ownerExpr instanceof IdentifierExpr) {
             IdentifierExpr identifierExpr = (IdentifierExpr) ownerExpr;
-//            SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(identifierExpr);
-//            MethodDecl method = (MethodDecl) symbolTable.symbolTableScope;
             MethodDecl method = (MethodDecl) curScopeStack.lastElement();
             SymbolTable symbolTable = symbolTablesManager.getEnclosingScope(method);
             if(method.vardecls().stream().anyMatch(varDecl -> varDecl.name().equals(identifierExpr.id()))) { // Owner is local variable

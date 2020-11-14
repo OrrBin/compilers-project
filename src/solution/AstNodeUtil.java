@@ -39,7 +39,7 @@ public class AstNodeUtil {
         return (ClassDecl) symbolTable.symbolTableScope;
     }
 
-    public ClassDecl getMethodSuperClassDeclaration(MethodDecl methodDecl) {
+    public ClassDecl getSuperClassDeclarationOfMethod(MethodDecl methodDecl) {
         ClassDecl classDecl = getClassDeclaration(methodDecl);
         SymbolTable symbolTable = getEnclosingScope(classDecl);
         AstNode scope = symbolTable.symbolTableScope;
@@ -54,6 +54,18 @@ public class AstNodeUtil {
             scope = symbolTable.symbolTableScope;
         }
         return last;
+    }
+
+    /** return all classes which inhering @method.
+     *  explicitly: find the super class which declare the method and return all classes which
+     *             inheriting him **/
+
+    public List<ClassDecl> getFamilyOfMethod(MethodDecl method){
+        List<ClassDecl> family = new ArrayList<>();
+        ClassDecl superClass = getSuperClassDeclarationOfMethod(method);
+        family.add(superClass);
+        family.addAll(getExtendingClasses(superClass));
+        return family;
     }
 
     public boolean hasMethod(ClassDecl clazz, MethodDecl methodDecl) {

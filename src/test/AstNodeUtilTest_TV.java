@@ -24,7 +24,7 @@ public class AstNodeUtilTest_TV extends AstNodeUtilTest{
         List<ClassDecl> extendingClasses = astNodeUtil.getExtendingClasses(visitorClass);
         ClassDecl myVisitorClass = extendingClasses.get(0);
         MethodDecl visitMethod = myVisitorClass.methoddecls().get(0);
-        ClassDecl superClassDeclaration = astNodeUtil.getMethodSuperClassDeclaration(visitMethod);
+        ClassDecl superClassDeclaration = astNodeUtil.getSuperClassDeclarationOfMethod(visitMethod);
         assert superClassDeclaration.name().equals("Visitor");
     }
 

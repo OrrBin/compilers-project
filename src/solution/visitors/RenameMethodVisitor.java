@@ -8,26 +8,32 @@ import solution.actions.MethodDeclRenameOp;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 //TODO: Oz
 public class RenameMethodVisitor implements Visitor {
 
-    protected RenameOpParams op;
-    protected List<RenameOp<?>> renameOps;
-    protected ClassDecl methodClassScope;
-    protected AstNodeUtil util;
+    private RenameOpParams op;
+    private List<RenameOp<?>> renameOps;
+    //private ClassDecl methodClassScope;
+    private AstNodeUtil util;
+    private Set<ClassDecl> family;
 
-    public RenameMethodVisitor(RenameOpParams op, List<RenameOp<?>> renameOps, ClassDecl scope, AstNodeUtil util) {
+    public RenameMethodVisitor(RenameOpParams op,MethodDecl method, List<RenameOp<?>> renameOps, AstNodeUtil util) {
         this.op = op;
         this.renameOps = renameOps;
-        this.methodClassScope = scope;
+        //this.methodClassScope = scope;
         this.util = util;
+        this.family = new HashSet<>();
+        family.addAll(util.getFamilyOfMethod(method));
     }
 
     @Override
     public void visit(Program program) {
-        // No need to implement
+        program.classDecls().forEach(clazz -> clazz.accept(this));
     }
 
     @Override
@@ -139,11 +145,10 @@ public class RenameMethodVisitor implements Visitor {
 
     @Override
     public void visit(MethodCallExpr e) {
-
         SymbolTable table = util.getEnclosingScope(e);
+        if (table==null) return;
         ClassDecl scope = (ClassDecl) table.symbolTableScope;
-        String className = scope.name();
-        if(className.equals(this.methodClassScope.name()) && e.methodId().equals(op.originalName)) {
+        if(family.contains(scope) && e.methodId().equals(op.originalName)) {
             renameOps.add(new MethodCallRenameOp(op, e));
         }
     }

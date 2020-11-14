@@ -2,10 +2,8 @@ package solution;
 
 import ast.AstNode;
 import ast.ClassDecl;
-import ast.FormalArg;
 import ast.MethodDecl;
 import ast.Program;
-import ast.VarDecl;
 import ast.VariableIntroduction;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
@@ -101,19 +99,12 @@ public class Renamer {
 
     public void renameMethod(RenameOpParams op) {
 //        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
-        AstNode method = astNodeUtil.findByLineNumber(prog, op.originalLine);
-        ClassDecl clazz = astNodeUtil.getClassDeclaration(method); // will find the super class
+        MethodDecl method = (MethodDecl) astNodeUtil.findByLineNumber(prog, op.originalLine);
+//        ClassDecl clazz = astNodeUtil.getSuperClassDeclarationOfMethod(method);
 
-        List<ClassDecl> classes = new ArrayList<>();
-        classes.add(clazz);
-        classes.addAll(astNodeUtil.getExtendingClasses(clazz));
-        RenameMethodVisitor visitor = new RenameMethodVisitor(op, renameOps, clazz, astNodeUtil);
-
-        for (ClassDecl classDecl : classes) {
-            classDecl.accept(visitor);
-        }
-
+        RenameMethodVisitor visitor = new RenameMethodVisitor(op, method, renameOps, astNodeUtil);
         prog.mainClass().accept(visitor);
+        prog.accept(visitor);
     }
 
 

@@ -8,6 +8,7 @@ import solution.RenameOpParams;
 import solution.Renamer;
 import solution.SymbolTablesManager;
 import solution.symbol_table.SymbolTableInitVisitor;
+import solution.symbol_table.SymbolTablePreInitVisitor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,7 +53,9 @@ public class FullFlowTest {
                 }
 
                 SymbolTablesManager manager = new SymbolTablesManager();
-                prog.accept(new SymbolTableInitVisitor(manager));
+                var preInitVisitor = new SymbolTablePreInitVisitor(manager);
+                prog.accept(preInitVisitor);
+                prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
                 AstNodeUtil util = new AstNodeUtil(manager);
                 Renamer renamer = new Renamer(prog, util);
                 renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));

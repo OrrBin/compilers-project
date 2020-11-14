@@ -22,12 +22,10 @@ public class SymbolTableInitVisitor implements Visitor {
     Map<String, ClassDecl> name2AstNodeMap;
     Stack<AstNode> curScopeStack;
 
-    public SymbolTableInitVisitor(SymbolTablesManager symbolTablesManager){
-
+    public SymbolTableInitVisitor(SymbolTablesManager symbolTablesManager, Map<String, ClassDecl> name2AstNodeMap) {
         this.symbolTablesManager = symbolTablesManager;
-        name2AstNodeMap = new HashMap<>();
-        curScopeStack = new Stack<>();
-
+        this.name2AstNodeMap = name2AstNodeMap;
+        this.curScopeStack = new Stack<>();
     }
 
     void initName2ClassNode(Program program){

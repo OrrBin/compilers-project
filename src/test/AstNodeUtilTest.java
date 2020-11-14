@@ -5,6 +5,7 @@ import ast.Program;
 import solution.AstNodeUtil;
 import solution.SymbolTablesManager;
 import solution.symbol_table.SymbolTableInitVisitor;
+import solution.symbol_table.SymbolTablePreInitVisitor;
 
 import java.io.File;
 
@@ -22,7 +23,9 @@ public abstract class AstNodeUtilTest {
         AstXMLSerializer xmlSerializer = new AstXMLSerializer();
         prog = xmlSerializer.deserialize(new File(xmlFileName));
         symbolTablesManager = new SymbolTablesManager();
-        prog.accept(new SymbolTableInitVisitor(symbolTablesManager));
+        var preInitVisitor = new SymbolTablePreInitVisitor(symbolTablesManager);
+        prog.accept(preInitVisitor);
+        prog.accept(new SymbolTableInitVisitor(symbolTablesManager, preInitVisitor.name2AstNodeMap));
         astNodeUtil = new AstNodeUtil(symbolTablesManager);
 
     }

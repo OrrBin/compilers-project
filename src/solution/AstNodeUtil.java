@@ -39,23 +39,25 @@ public class AstNodeUtil {
         return (ClassDecl) symbolTable.symbolTableScope;
     }
 
-    public ClassDecl getSuperClassDeclaration(MethodDecl methodDecl) {
-        //TODO : OZ, Implement correctly, find the first class sin inheritance hierarchy that has the method deceleration
+    public ClassDecl getMethodSuperClassDeclaration(MethodDecl methodDecl) {
         ClassDecl classDecl = getClassDeclaration(methodDecl);
         SymbolTable symbolTable = getEnclosingScope(classDecl);
-
-        SymbolTable prev = symbolTable;
         AstNode scope = symbolTable.symbolTableScope;
-        while (scope instanceof ClassDecl &&
-                ((ClassDecl) scope).methoddecls().stream().anyMatch(method -> method.name().equals(methodDecl.name()))) {
-            prev = symbolTable;
-            symbolTable = symbolTable.parentSymbolTable;
-            if (symbolTable == null) {
-                throw new RuntimeException("Couln't find symbolTableScope of ClassDecl for MethodDecl with name: " + methodDecl.name());
-            }
-        }
+        ClassDecl last = null;
 
-        return (ClassDecl) prev.symbolTableScope;
+        while (scope instanceof ClassDecl) {
+            ClassDecl scopeClass = (ClassDecl) scope;
+            if (hasMethod(scopeClass, methodDecl)) {
+                last = scopeClass;
+            }
+            symbolTable = symbolTable.parentSymbolTable;
+            scope = symbolTable.symbolTableScope;
+        }
+        return last;
+    }
+
+    public boolean hasMethod(ClassDecl clazz, MethodDecl methodDecl) {
+        return clazz.methoddecls().stream().anyMatch(method -> method.name().equals(methodDecl.name()));
     }
 
     public SymbolTable getEnclosingScope(AstNode astNode) {

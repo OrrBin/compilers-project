@@ -1,54 +1,51 @@
 package test;
 
 import ast.*;
-import solution.VariableType;
 
+import java.util.List;
 
 public class AstNodeUtilTest_TV extends AstNodeUtilTest{
 
-    private static final String xmlFileName = "examples/ast/BinarySearch.java.xml";
+    private static final String xmlFileName = "examples/ast/TreeVisitor.java.xml";
 
-    public AstNodeUtilTest_TV(String xmlFileName){
+    public AstNodeUtilTest_TV(String xmlFileName) {
         super(xmlFileName);
     }
 
-    public void getMethodTest(){
-        ClassDecl BS = prog.classDecls().get(0);
-        MethodDecl startMethod = BS.methoddecls().get(1);
-
-        VarDecl auxLocal = startMethod.vardecls().get(0);
-        FormalArg sz = startMethod.formals().get(0);
-
-        assert astNodeUtil.getMethod(auxLocal) == startMethod;
-        assert astNodeUtil.getMethod(sz) == startMethod;
+    public void getExtendingClassesTest(){
+        ClassDecl visitorClass = prog.classDecls().get(2);
+        List<ClassDecl> extendingClasses = astNodeUtil.getExtendingClasses(visitorClass);
+        assert extendingClasses.size() == 1;
+        assert extendingClasses.get(0).name().equals("MyVisitor");
     }
 
-    public void findVariableTypeTest() throws Exception {
-        ClassDecl BS = prog.classDecls().get(0);
-        VarDecl number = BS.fields().get(0);
-        VariableType type;
-
-        type = astNodeUtil.findVariableType(number);
-        assert type == VariableType.FIELD;
-
-        MethodDecl startMethod = BS.methoddecls().get(1);
-        VarDecl auxLocal = startMethod.vardecls().get(0);
-        type = astNodeUtil.findVariableType(auxLocal);
-        assert type == VariableType.LOCAL;
-
-        FormalArg sz = startMethod.formals().get(0);
-        type = astNodeUtil.findVariableType(sz);
-        assert type == VariableType.PARAMETER;
+    public void getMethodSuperClassDeclaration(){
+        ClassDecl visitorClass = prog.classDecls().get(2);
+        List<ClassDecl> extendingClasses = astNodeUtil.getExtendingClasses(visitorClass);
+        ClassDecl myVisitorClass = extendingClasses.get(0);
+        MethodDecl visitMethod = myVisitorClass.methoddecls().get(0);
+        ClassDecl superClassDeclaration = astNodeUtil.getMethodSuperClassDeclaration(visitMethod);
+        assert superClassDeclaration.name().equals("Visitor");
     }
 
+    public void getClassTest(){
+        ClassDecl visitorClass = prog.classDecls().get(2);
+        MethodDecl visitorMethod = visitorClass.methoddecls().get(0);
+        VarDecl nti = visitorMethod.vardecls().get(0);
+        assert astNodeUtil.getClassDeclaration(visitorClass).equals(visitorClass);
+        assert astNodeUtil.getClassDeclaration(visitorMethod).equals(visitorClass);
+        assert astNodeUtil.getClassDeclaration(nti).equals(visitorClass);
+    }
 
-    public static void main(String[] args) throws Exception {
-        AstNodeUtilTest_TV astNodeUtilTestTV = new AstNodeUtilTest_TV(xmlFileName);
+    public static void main(String[] args) {
+        AstNodeUtilTest_TV astNodeUtilTestBS = new AstNodeUtilTest_TV(xmlFileName);
 
-        astNodeUtilTestTV.findVariableTypeTest();
+        astNodeUtilTestBS.getExtendingClassesTest();
         System.out.println("Test1 passed");
-        astNodeUtilTestTV.getMethodTest();
+        astNodeUtilTestBS.getClassTest();
         System.out.println("Test2 passed");
+        astNodeUtilTestBS.getMethodSuperClassDeclaration();
+        System.out.println("Test3 passed");
 
         System.out.println("All tests passed");
 

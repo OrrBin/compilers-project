@@ -51,9 +51,9 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
                     isField = false;
                 }
             }
+            if (isField) renameOps.add(new AssignmentLvRenameOp(op,assignStatement));
         }
 
-        if (isField) renameOps.add(new AssignmentLvRenameOp(op,assignStatement));
         var rv = assignStatement.rv();
         rv.accept(this);
     }
@@ -71,9 +71,9 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
                     isField = false;
                 }
             }
+            if (isField) renameOps.add(new AssignArrayLvRenameOp(op,assignArrayStatement));
         }
 
-        if (isField) renameOps.add(new AssignArrayLvRenameOp(op,assignArrayStatement));
         var rv = assignArrayStatement.rv();
         rv.accept(this);
     }

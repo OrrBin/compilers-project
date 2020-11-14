@@ -3,6 +3,7 @@ package solution;
 import ast.*;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
+import solution.symbol_table.symbol_types.Symbol;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,6 +39,25 @@ public class AstNodeUtil {
         return (ClassDecl) symbolTable.symbolTableScope;
     }
 
+    public ClassDecl getSuperClassDeclaration(MethodDecl methodDecl) {
+        //TODO : OZ, Implement correctly, find the first class sin inheritance hierarchy that has the method deceleration
+        ClassDecl classDecl = getClassDeclaration(methodDecl);
+        SymbolTable symbolTable = getEnclosingScope(classDecl);
+
+        SymbolTable prev = symbolTable;
+        AstNode scope = symbolTable.symbolTableScope;
+        while (scope instanceof ClassDecl &&
+                ((ClassDecl) scope).methoddecls().stream().anyMatch(method -> method.name().equals(methodDecl.name()))) {
+            prev = symbolTable;
+            symbolTable = symbolTable.parentSymbolTable;
+            if (symbolTable == null) {
+                throw new RuntimeException("Couln't find symbolTableScope of ClassDecl for MethodDecl with name: " + methodDecl.name());
+            }
+        }
+
+        return (ClassDecl) prev.symbolTableScope;
+    }
+
     public SymbolTable getEnclosingScope(AstNode astNode) {
         return symbolTablesManager.getEnclosingScope(astNode);
     }
@@ -50,7 +70,7 @@ public class AstNodeUtil {
         List<ClassDecl> extendingClasses = new ArrayList<>();
         extendingClasses.add(classDecl);
         SymbolTable4Class rootSymbolTable = (SymbolTable4Class) getEnclosingScope(classDecl);
-        for (SymbolTable symbolTable : rootSymbolTable.childrenSymbolTables){
+        for (SymbolTable symbolTable : rootSymbolTable.childrenSymbolTables) {
             extendingClasses.addAll(getExtendingClassesHelper((ClassDecl) symbolTable.symbolTableScope));
         }
         return extendingClasses;
@@ -67,16 +87,22 @@ public class AstNodeUtil {
     // region Variables
 
     public VariableType findVariableType(VariableIntroduction var) throws Exception {
-        if (isLocal(var)) return VariableType.LOCAL;
-        if (isParameter(var)) return VariableType.PARAMETER;
-        if (isField(var)) return VariableType.FIELD;
+        if (isLocal(var))
+            return VariableType.LOCAL;
+        if (isParameter(var))
+            return VariableType.PARAMETER;
+        if (isField(var))
+            return VariableType.FIELD;
         throw new Exception("Can't determine variable type");
     }
 
     public VariableType findVariableType(IdentifierExpr var) throws Exception {
-        if (isLocal(var)) return VariableType.LOCAL;
-        if (isParameter(var)) return VariableType.PARAMETER;
-        if (isField(var)) return VariableType.FIELD;
+        if (isLocal(var))
+            return VariableType.LOCAL;
+        if (isParameter(var))
+            return VariableType.PARAMETER;
+        if (isField(var))
+            return VariableType.FIELD;
         throw new Exception("Can't determine variable type");
     }
 
@@ -219,7 +245,9 @@ public class AstNodeUtil {
                     //go over all symbols in method symbol table
                     for (var symbolInMethod : mSymbolsKeySet) {
                         AstNode mSymbolNode = mSymTableEntries.get(symbolInMethod).node;
-                        if(nodeFoundByLineNum(mSymbolNode, lineNumber)) {return mSymbolNode;}
+                        if (nodeFoundByLineNum(mSymbolNode, lineNumber)) {
+                            return mSymbolNode;
+                        }
                     }
                 }
             }

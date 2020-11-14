@@ -37,11 +37,18 @@ public class RenameTest {
 //        var originalLine = 17;
 //        var newName = "OR_HABAT";
 
-        var filename = "examples/ast/Factorial.java.xml";
-        var outFileName = "examples/ast/Factorial_renamed_res.java.xml";
+//        var filename = "examples/ast/Factorial.java.xml";
+//        var outFileName = "examples/ast/Factorial_renamed_res.java.xml";
+//        var type = "method";
+//        var originalName = "ComputeFac";
+//        var originalLine = 19;
+//        var newName = "OR_HABAT";
+
+        var filename = "examples/ast/TreeVisitor.java.xml";
+        var outFileName = "examples/ast/TreeVisitor_renamed_res.java.xml";
         var type = "method";
-        var originalName = "ComputeFac";
-        var originalLine = 19;
+        var originalName = "visit";
+        var originalLine = 382;
         var newName = "OR_HABAT";
 
         testRename(filename, outFileName, type, originalName, originalLine, newName);

@@ -54,14 +54,24 @@ public class RenameTest {
 //        var originalLine = 19;
 //        var newName = "OR_HABAT";
 
-        var filename = "examples/ast/TreeVisitor.java.xml";
-        var outFileName = "examples/ast/TreeVisitor_renamed_res.java.xml";
-        var type = "method";
-        var originalName = "visit";
-        var originalLine = 382;
-        var newName = "OR_HABAT";
+//        var filename = "examples/ast/TreeVisitor.java.xml";
+//        var outFileName = "examples/ast/TreeVisitor_renamed_res.java.xml";
+//        var type = "method";
+//        var originalName = "visit";
+//        var originalLine = 382;
+//        var newName = "OR_HABAT";
 
-        testRename(filename, outFileName, type, originalName, originalLine, newName);
+
+        var inputMethod = args[0];
+        var action = args[1];
+        var type = args[2];
+        var originalName = args[3];
+        int originalLine = Integer.parseInt(args[4]);
+        var newName = args[5];
+        var filename = args[args.length - 2];
+        var outfilename = args[args.length - 1];
+
+        testRename(filename, outfilename, type, originalName, originalLine, newName);
     }
 
     public static void testRename(String fileName, String outFileName, String type,

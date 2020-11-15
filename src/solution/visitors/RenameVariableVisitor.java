@@ -117,6 +117,7 @@ public abstract class RenameVariableVisitor implements Visitor {
             renameOps.add(new AssignArrayLvRenameOp(op, assignArrayStatement));
         }
 
+        assignArrayStatement.accept(this);
         assignArrayStatement.rv().accept(this);
     }
 

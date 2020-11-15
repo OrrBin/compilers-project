@@ -100,6 +100,7 @@ public class RenameMethodVisitor implements Visitor {
     public void visit(AssignArrayStatement assignArrayStatement) {
         var rv = assignArrayStatement.rv();
         rv.accept(this);
+        assignArrayStatement.index().accept(this);
     }
 
     @Override
@@ -146,7 +147,6 @@ public class RenameMethodVisitor implements Visitor {
     @Override
     public void visit(MethodCallExpr e) {
         SymbolTable table = util.getEnclosingScope(e);
-        //if (table==null) return;
         ClassDecl scope = (ClassDecl) table.symbolTableScope;
         if(family.contains(scope) && e.methodId().equals(op.originalName)) {
             renameOps.add(new MethodCallRenameOp(op, e));
@@ -180,7 +180,7 @@ public class RenameMethodVisitor implements Visitor {
 
     @Override
     public void visit(NewIntArrayExpr e) {
-        // No need to implement
+        e.lengthExpr().accept(this);
     }
 
     @Override

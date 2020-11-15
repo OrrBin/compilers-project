@@ -74,8 +74,11 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
             if (isField) renameOps.add(new AssignArrayLvRenameOp(op,assignArrayStatement));
         }
 
+        assignArrayStatement.index().accept(this);
+
         var rv = assignArrayStatement.rv();
         rv.accept(this);
+
     }
 
     @Override

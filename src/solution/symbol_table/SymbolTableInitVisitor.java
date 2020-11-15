@@ -356,7 +356,9 @@ public class SymbolTableInitVisitor implements Visitor {
                 while(classSymbolTable != null) {
                     ClassDecl classDecl = (ClassDecl) classSymbolTable.symbolTableScope;
                     if(classDecl.fields().stream().anyMatch(varDecl -> varDecl.name().equals(identifierExpr.id()))) {
-                        var declScope = name2AstNodeMap.get(classDecl.name());
+                        VarDecl var = classDecl.fields().stream().filter(varDecl -> varDecl.name().equals(identifierExpr.id())).findFirst().get();
+                        RefType type = (RefType) var.type();
+                        var declScope = name2AstNodeMap.get(type.id());
                         SymbolTable scopeSymbolTable = symbolTablesManager.getEnclosingScope(declScope);
                         symbolTablesManager.setEnclosingScope(e, scopeSymbolTable);
                         break;

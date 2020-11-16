@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="RenameTest-var10" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="test.RenameTest" />
+    <module name="compilers-project" />
+    <option name="PROGRAM_PARAMETERS" value="unmarshal rename var theVar 26 renamedVar examples/ex1/test_cases/variable_renaming/formal_param_with_while_and_assign_statements.xml  temp_out/formal_param_with_while_and_assign_statements_renamed.xml " />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="test.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

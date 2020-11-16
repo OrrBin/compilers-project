@@ -28,8 +28,6 @@ public class SymbolKey {
         return Objects.hash(name, type);
     }
 
-    enum SymbolKeyType {
-        VAR,
-        METHOD
-    }
+
+
 }

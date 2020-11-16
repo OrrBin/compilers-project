@@ -143,6 +143,7 @@ public class RenameTest {
                     }
                 }
 
+                outFile.write(renamedStr);
 
             } finally {
                 outFile.flush();

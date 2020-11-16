@@ -1,0 +1,32 @@
+class Main {
+	public static void main(String[] args) {
+		System.out.println(1);
+	}
+}
+
+class Shared {
+	int renamedVar;
+
+	int foo() {
+		return renamedVar;
+	}
+
+}
+
+class A extends Shared {
+}
+
+class B extends A {
+	int foo() {
+		return renamedVar;
+	}
+
+}
+
+class C extends A {
+	int foo() {
+		return renamedVar;
+	}
+
+}
+

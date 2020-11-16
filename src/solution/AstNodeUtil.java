@@ -177,52 +177,7 @@ public class AstNodeUtil {
     // endregion
 
 
-//    //region findByLineNumber
-//
-//    private AstNode findScopeByLineNumber(List<? extends AstNode> scopes, int lineNumber) {
-//        var tmpRetScope = scopes.get(0);
-//        for (var curScope : scopes) {
-//
-//            int curScopeLineNum = curScope.lineNumber;
-//            int tmpScopeLineNum = tmpRetScope.lineNumber;
-//
-//            if (curScopeLineNum > tmpScopeLineNum && curScopeLineNum <= lineNumber) {
-//                tmpRetScope = curScope;
-//            }
-//        }
-//        return tmpRetScope;
-//    }
-//
-//    private AstNode findSymbolNodeByLineNumber(SymbolTable classScopeSymbolTable, int lineNumber) {
-//        var symbolsMap = classScopeSymbolTable.entries;
-//        List<AstNode> symbolNodesList = new ArrayList<>();
-//
-//        //insert corresponding nodes of classSymbolTable symbols to symbolNodesList
-//        symbolsMap.keySet().forEach(id -> symbolNodesList.add(symbolsMap.get(id).node));
-//        return findScopeByLineNumber(symbolNodesList, lineNumber);
-//
-//    }
-//
-//    public AstNode findByLineNumber(Program program, int lineNumber) {
-//
-//        //find class scope for lineNumber
-//        List<ClassDecl> classes = program.classDecls();
-//        var classScope = findScopeByLineNumber(classes, lineNumber);
-//
-//        //get classScope symbol table
-//        SymbolTable classScopeSymbolTable = symbolTablesManager.getEnclosingScope(classScope);
-//
-//        //find symbol node from classScope symbol table for lineNumber
-//        /* return AstNode can be:
-//            methodDecl(for methods, formal args, local vars)
-//            varDecl(for fields)
-//         */
-//        return findSymbolNodeByLineNumber(classScopeSymbolTable, lineNumber);
-//    }
-//
-//    //endregion
-
-    //region findByLineNumber
+    // region findByLineNum
 
     boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber) {
         var nodeLineNum = nodeToCheck.lineNumber;

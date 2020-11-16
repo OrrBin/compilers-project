@@ -1,13 +1,17 @@
 package solution.symbol_table.symbol_table_types;
 
 import ast.AstNode;
+import ast.MethodDecl;
 import solution.symbol_table.symbol_types.Symbol;
+import solution.symbol_table.symbol_types.SymbolKey;
+import solution.symbol_table.symbol_types.SymbolKeyType;
+
 
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class SymbolTable {
-    public Map<String, Symbol> entries;
+    public Map<SymbolKey, Symbol> entries;
     public SymbolTable parentSymbolTable;
     public AstNode symbolTableScope;
 
@@ -19,8 +23,18 @@ public abstract class SymbolTable {
     }
 
 
+    private SymbolKeyType findType(Symbol symbol) {
+        var symbolNode = symbol.node;
+        //symbol can only be a method or a field
+        if(symbolNode instanceof MethodDecl) {return SymbolKeyType.METHOD;}
+        return SymbolKeyType.VAR;
+    }
+
     public void addSymbol2Table(Symbol symbol) {
         String id = symbol.id;
-        entries.put(id, symbol);
+        SymbolKeyType type = findType(symbol);
+        SymbolKey symbolKey = new SymbolKey(id, type);
+        entries.put(symbolKey, symbol);
     }
+
 }

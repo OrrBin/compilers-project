@@ -39,7 +39,7 @@ public class Renamer {
     }
 
     public void renameVariable(RenameOpParams op) throws Exception {
-        VariableIntroduction var = (VariableIntroduction) astNodeUtil.findByLineNumber(prog, op.originalLine);
+        VariableIntroduction var = (VariableIntroduction) astNodeUtil.findByLineNumber(prog, op.originalLine, false);
         VariableType variableType = astNodeUtil.findVariableType(var);
         switch (variableType) {
             case FIELD:
@@ -56,7 +56,7 @@ public class Renamer {
 
     private void renameLocal(RenameOpParams op) throws Exception {
 //         VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
-        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine, false);
         SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
@@ -70,7 +70,7 @@ public class Renamer {
 
     private void renameParameter(RenameOpParams op) throws Exception {
 //        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
-        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine, false);
         SymbolTable table = astNodeUtil.getEnclosingScope(var);
         AstNode node = table.symbolTableScope;
         if (!(node instanceof MethodDecl)) {
@@ -84,7 +84,7 @@ public class Renamer {
 
     private void renameField(RenameOpParams op) {
 //        VarDecl var = crawler.findByLineNumber(op.originalLine, VarDecl.class);
-        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine);
+        AstNode var = astNodeUtil.findByLineNumber(prog, op.originalLine, false);
         ClassDecl clazz = astNodeUtil.getClassDeclaration(var); // will find the super class
 
         List<ClassDecl> classes = new ArrayList<>();
@@ -99,7 +99,7 @@ public class Renamer {
 
     public void renameMethod(RenameOpParams op) {
 //        MethodDecl method = crawler.findByLineNumber(op.originalLine, MethodDecl.class);
-        MethodDecl method = (MethodDecl) astNodeUtil.findByLineNumber(prog, op.originalLine);
+        MethodDecl method = (MethodDecl) astNodeUtil.findByLineNumber(prog, op.originalLine, true);
 //        ClassDecl clazz = astNodeUtil.getSuperClassDeclarationOfMethod(method);
 
         RenameMethodVisitor visitor = new RenameMethodVisitor(op, method, renameOps, astNodeUtil);

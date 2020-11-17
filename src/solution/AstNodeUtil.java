@@ -179,13 +179,14 @@ public class AstNodeUtil {
 
     // region findByLineNum
 
-    boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber) {
+    boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber, boolean isMethod) {
         var nodeLineNum = nodeToCheck.lineNumber;
-        return (nodeLineNum != null) && (nodeLineNum == lineNumber);
+        boolean nodeTypeVerified = (isMethod && nodeToCheck instanceof MethodDecl)  || (!isMethod && !(nodeToCheck instanceof MethodDecl));
+        return (nodeLineNum != null) && (nodeLineNum == lineNumber) && nodeTypeVerified;
     }
 
     //if retVal == null then program input is incorrect
-    public AstNode findByLineNumber(Program program, int lineNumber) {
+    public AstNode findByLineNumber(Program program, int lineNumber, boolean isMethod) {
         List<ClassDecl> classes = program.classDecls();
 
         //go over all program classes' symbol tables
@@ -200,7 +201,7 @@ public class AstNodeUtil {
                 AstNode cSymbolNode = cSymTableEntries.get(symbol).node;
 
                 //check for field or method
-                if (nodeFoundByLineNum(cSymbolNode, lineNumber)) {
+                if (nodeFoundByLineNum(cSymbolNode, lineNumber, isMethod)) {
                     return cSymbolNode;
                 }
 
@@ -214,16 +215,18 @@ public class AstNodeUtil {
                     //go over all symbols in method symbol table
                     for (var symbolInMethod : mSymbolsKeySet) {
                         AstNode mSymbolNode = mSymTableEntries.get(symbolInMethod).node;
-                        if (nodeFoundByLineNum(mSymbolNode, lineNumber)) {
+                        if (nodeFoundByLineNum(mSymbolNode, lineNumber, isMethod)) {
                             return mSymbolNode;
                         }
                     }
                 }
+
             }
+
         }
 
         //if we're here then the program input is incorrect
-        throw new IllegalArgumentException("probably no line number");
+        throw new IllegalArgumentException("Probably no line number");
     }
 }
 

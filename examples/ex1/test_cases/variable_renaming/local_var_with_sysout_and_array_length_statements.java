@@ -17,7 +17,7 @@ class B extends A {
 }
 
 class C extends A {
-    int[] theVar;
+    int theVar;
 
     public int foo() {
         return theVar.length;

@@ -59,7 +59,6 @@ public class Main {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
 
-
                     SymbolTablesManager manager = new SymbolTablesManager();
                     var preInitVisitor = new SymbolTablePreInitVisitor(manager);
                     prog.accept(preInitVisitor);
@@ -68,8 +67,11 @@ public class Main {
                     Renamer renamer = new Renamer(prog, util);
                     renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
 
-                    throw new UnsupportedOperationException("TODO - Ex. 1");
+                    AstPrintVisitor astPrintVisitor = new AstPrintVisitor();
+                    prog.accept(astPrintVisitor);
 
+                    String renamedStr = astPrintVisitor.getString();
+                    outFile.write(renamedStr);
                 } else {
                     throw new IllegalArgumentException("unknown command line action " + action);
                 }

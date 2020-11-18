@@ -59,16 +59,21 @@ public class Main {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
 
+                    // initialize symbol tables
                     SymbolTablesManager manager = new SymbolTablesManager();
                     var preInitVisitor = new SymbolTablePreInitVisitor(manager);
                     prog.accept(preInitVisitor);
                     prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
+
+                    // execute renaming
                     AstNodeUtil util = new AstNodeUtil(manager);
                     Renamer renamer = new Renamer(prog, util);
                     renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
 
+                    // export to xml file
                     AstXMLSerializer xmlSerializer = new AstXMLSerializer();
                     xmlSerializer.serialize(prog, outfilename);
+
                 } else {
                     throw new IllegalArgumentException("unknown command line action " + action);
                 }

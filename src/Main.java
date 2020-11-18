@@ -67,11 +67,8 @@ public class Main {
                     Renamer renamer = new Renamer(prog, util);
                     renamer.rename(new RenameOpParams(type, originalName, Integer.parseInt(originalLine), newName, isMethod));
 
-                    AstPrintVisitor astPrintVisitor = new AstPrintVisitor();
-                    prog.accept(astPrintVisitor);
-
-                    String renamedStr = astPrintVisitor.getString();
-                    outFile.write(renamedStr);
+                    AstXMLSerializer xmlSerializer = new AstXMLSerializer();
+                    xmlSerializer.serialize(prog, outfilename);
                 } else {
                     throw new IllegalArgumentException("unknown command line action " + action);
                 }

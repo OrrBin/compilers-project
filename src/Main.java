@@ -1,5 +1,6 @@
 import ast.*;
 import solution.AstNodeUtil;
+import solution.LLVMGenerator;
 import solution.RenameOpParams;
 import solution.Renamer;
 import solution.SymbolTablesManager;
@@ -42,6 +43,15 @@ public class Main {
                     throw new UnsupportedOperationException("TODO - Ex. 3");
 
                 } else if (action.equals("compile")) {
+                    // initialize symbol tables
+                    SymbolTablesManager manager = new SymbolTablesManager();
+                    var preInitVisitor = new SymbolTablePreInitVisitor(manager);
+                    prog.accept(preInitVisitor);
+                    prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
+
+                    // execute renaming
+                    AstNodeUtil util = new AstNodeUtil(manager);
+                    LLVMGenerator generator = new LLVMGenerator(prog, util);
                     throw new UnsupportedOperationException("TODO - Ex. 2");
 
                 } else if (action.equals("rename")) {

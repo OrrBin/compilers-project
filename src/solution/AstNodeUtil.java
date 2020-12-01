@@ -228,5 +228,11 @@ public class AstNodeUtil {
         //if we're here then the program input is incorrect
         throw new IllegalArgumentException("Probably no line number");
     }
+
+    //TODO : OZ
+    public List<ClassDecl> getClassHierarchy() {
+        return new ArrayList<>();
+    }
+
 }
 

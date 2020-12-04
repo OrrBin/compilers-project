@@ -5,6 +5,7 @@ import ast.AstType;
 import ast.BoolAstType;
 import ast.IntArrayAstType;
 import ast.IntAstType;
+import ast.RefType;
 
 public class LLVMUtil {
     public String toLLVM(AstNode astNode){
@@ -54,6 +55,9 @@ public class LLVMUtil {
         }
         if(type instanceof IntArrayAstType) {
             return "i32*";
+        }
+        if(type instanceof RefType) {
+            return "i8*";
         }
 
         throw new IllegalArgumentException("Unknown type");

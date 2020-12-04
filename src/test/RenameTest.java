@@ -101,48 +101,7 @@ public class RenameTest {
                 prog.accept(astPrintVisitor);
 
                 String renamedStr = astPrintVisitor.getString();
-
-                List<String> originalLines = originalStr.lines().collect(Collectors.toList());
-                List<String> renamedLines = renamedStr.lines().collect(Collectors.toList());
-
-                int maxLineLength = 0;
-                for (String line : originalLines) {
-                    int lineLength = 0;
-                    for (char c : line.toCharArray()) {
-                        if (c == '\t') {
-                            lineLength += 4;
-                        } else {
-                            lineLength += 1;
-                        }
-                    }
-                    if (lineLength > maxLineLength) {
-                        maxLineLength = lineLength;
-                    }
-                }
-
-                int linesNum = originalLines.size();
-
-                System.out.println(String.format("Renaming '%s' in line %d to '%s'", originalName, originalLine, newName));
-                System.out.println("====================================================================================");
-
-                for (int i = 0; i < linesNum; i++) {
-                    int lineLength = 0;
-                    for (char c : originalLines.get(i).toCharArray()) {
-                        if (c == '\t') {
-                            lineLength += 4;
-                        } else {
-                            lineLength += 1;
-                        }
-                    }
-                    String whitespace = " ".repeat(maxLineLength - lineLength);
-                    if(originalLines.get(i).equals(renamedLines.get(i))) {
-                        System.out.println(String.format("%03d", i + 1) + ". " + originalLines.get(i) + whitespace + "   |   " + renamedLines.get(i));
-                    } else {
-                        System.out.println(String.format("%03d", i + 1) + ". " + ANSI_RED + originalLines.get(i) + whitespace +
-                                ANSI_RESET + "   |   " + ANSI_GREEN + renamedLines.get(i) + ANSI_RESET);
-                    }
-                }
-
+                Util.writeDiff(originalStr, renamedStr);
                 outFile.write(renamedStr);
 
             } finally {

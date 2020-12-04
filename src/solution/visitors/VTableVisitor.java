@@ -58,7 +58,7 @@ public class VTableVisitor implements Visitor {
 
     @Override
     public void visit(ClassDecl classDecl) {
-        var ancestors = util.getClassHierarchy();
+        var ancestors = util.getClassHierarchy(classDecl);
         LinkedHashMap<String, MethodDecl> methods = new LinkedHashMap<>();
         LinkedHashMap<String, ClassDecl> methodToClass = new LinkedHashMap<>();
 

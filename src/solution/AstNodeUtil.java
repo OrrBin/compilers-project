@@ -229,9 +229,20 @@ public class AstNodeUtil {
         throw new IllegalArgumentException("Probably no line number");
     }
 
-    //TODO : OZ
-    public List<ClassDecl> getClassHierarchy() {
-        return new ArrayList<>();
+    // find class inhering hierarchy (including the current class)
+    public List<ClassDecl> getClassHierarchy(AstNode astNode) {
+        List<ClassDecl> hierarchy = new ArrayList<>();
+        ClassDecl classDecl = getClassDeclaration(astNode);
+        SymbolTable symbolTable = getEnclosingScope(classDecl);
+        AstNode scope = symbolTable.symbolTableScope;
+
+        while (scope instanceof ClassDecl) {
+            ClassDecl clazz = (ClassDecl) scope;
+            hierarchy.add(clazz);
+            symbolTable = symbolTable.parentSymbolTable;
+            scope = symbolTable.symbolTableScope;
+        }
+        return hierarchy;
     }
 
 }

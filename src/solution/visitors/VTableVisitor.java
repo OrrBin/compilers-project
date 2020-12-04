@@ -35,10 +35,11 @@ import ast.Visitor;
 import ast.WhileStatement;
 import solution.AstNodeUtil;
 
+import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
+
+import static solution.LLVMUtil.getTypeName;
 
 public class VTableVisitor implements Visitor {
 
@@ -60,22 +61,81 @@ public class VTableVisitor implements Visitor {
     public void visit(ClassDecl classDecl) {
         var ancestors = util.getClassHierarchy(classDecl);
         LinkedHashMap<String, MethodDecl> methods = new LinkedHashMap<>();
-        LinkedHashMap<String, ClassDecl> methodToClass = new LinkedHashMap<>();
+        LinkedHashMap<String, ClassDecl> methodToImplementingClass = new LinkedHashMap<>();
 
-        for(var clazz : ancestors) {
-            var clazzMethods = clazz.methoddecls();
-            for(var method : clazzMethods) {
-                if(!methods.containsKey(method.name())) {
+        for (var ancestor : ancestors) {
+            var ancestorMethods = ancestor.methoddecls();
+            for (var method : ancestorMethods) {
+                if (!methods.containsKey(method.name())) {
                     methods.put(method.name(), method);
                 }
 
-                methodToClass.put(method.name(), clazz);
+                methodToImplementingClass.put(method.name(), ancestor);
             }
         }
 
 
+        writeVTablePrefix(classDecl.name(), methods.size());
+        int i = 0;
+        for (var method : methods.entrySet()) {
+            writeVTableMethodRow(method.getValue(), methodToImplementingClass.get(method.getValue().name()), i == methods.size() - 1);
+            i++;
+        }
+        writeVTableSuffix();
+    }
 
+    private void writeVTableMethodRow(MethodDecl method, ClassDecl implementingClass, boolean isLastMethod) {
+        StringBuilder builder = new StringBuilder();
 
+        //Example: i8* bitcast (i32 (i8*, i32)* @Base.set to i8*),
+        builder.append("\t")
+                .append("i8* bitcast (")
+                .append(getTypeName(method.returnType()))
+                .append(" (i8*");
+
+        for (var param : method.formals()) {
+            builder.append(", ").append(getTypeName(param.type()));
+        }
+
+        builder.append(")* ")
+                .append("@").append(implementingClass.name()).append(".").append(method.name())
+                .append(" to i8*)");
+
+        if (!isLastMethod) {
+            builder.append(",");
+        }
+
+        builder.append("\n");
+
+        writeToStream(builder);
+    }
+
+    private void writeVTablePrefix(String className, int numOfFunctions) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("@.")
+                .append(className)
+                .append("_vtable = global [").append(numOfFunctions).append(" x i8*] [")
+                .append("\n");
+
+        writeToStream(builder);
+    }
+
+    private void writeVTableSuffix() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("]").append("\n");
+
+        writeToStream(builder);
+    }
+
+    private void writeToStream(StringBuilder builder) {
+        try {
+            outputStream.write(builder.toString().getBytes());
+        } catch (IOException e) {
+            System.out.println("ERROR: IO exception while writing class vTable to output stream");
+            e.printStackTrace();
+        }
     }
 
     @Override

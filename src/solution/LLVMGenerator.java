@@ -17,5 +17,6 @@ public class LLVMGenerator {
 
     public void generate(OutputStream outputStream) {
         VTableVisitor vtableVisitor = new VTableVisitor(outputStream, util);
+        program.accept(vtableVisitor);
     }
 }

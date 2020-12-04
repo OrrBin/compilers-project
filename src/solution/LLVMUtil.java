@@ -2,6 +2,9 @@ package solution;
 
 import ast.AstNode;
 import ast.AstType;
+import ast.BoolAstType;
+import ast.IntArrayAstType;
+import ast.IntAstType;
 
 public class LLVMUtil {
     public String toLLVM(AstNode astNode){
@@ -40,5 +43,19 @@ public class LLVMUtil {
                 res = "void";
         }
         return res;
+    }
+
+    public static String getTypeName(AstType type) {
+        if(type instanceof IntAstType) {
+            return "i32";
+        }
+        if(type instanceof BoolAstType) {
+            return "i1";
+        }
+        if(type instanceof IntArrayAstType) {
+            return "i32*";
+        }
+
+        throw new IllegalArgumentException("Unknown type");
     }
 }

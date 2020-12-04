@@ -49,10 +49,11 @@ public class Main {
                     prog.accept(preInitVisitor);
                     prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
 
-                    // execute renaming
                     AstNodeUtil util = new AstNodeUtil(manager);
                     LLVMGenerator generator = new LLVMGenerator(prog, util);
-                    throw new UnsupportedOperationException("TODO - Ex. 2");
+
+                    OutputStream os = new FileOutputStream(outfilename);
+                    generator.generate(os);
 
                 } else if (action.equals("rename")) {
                     var type = args[2];

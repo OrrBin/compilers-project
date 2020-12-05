@@ -194,12 +194,12 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(TrueExpr e) {
-
+        methodBuilder.appendBodyLine(String.format("%s = add i32 1, 0", allocateRegister()));
     }
 
     @Override
     public void visit(FalseExpr e) {
-
+        methodBuilder.appendBodyLine(String.format("%s = add i32 1, 0", allocateRegister()));
     }
 
     @Override

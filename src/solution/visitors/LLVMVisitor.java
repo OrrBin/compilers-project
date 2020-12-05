@@ -31,7 +31,18 @@ public class LLVMVisitor implements Visitor {
     }
 
     private String getLastRegister() {
-        return registerCounter > 0 ? "%_" + (registerCounter - 1) :  "%_"+0;
+        if (registerCounter > 0 ) {
+            return "%_" + (registerCounter - 1);
+        }
+
+        throw new IllegalArgumentException("Asked for last register but no register used yet");
+    }
+
+    private String getRegister(int offset) {
+        if (registerCounter >= offset)
+            return "%_" + (registerCounter - offset);
+
+        throw new IllegalArgumentException(String.format("Last register is %d but got offset %d", registerCounter-1, offset));
     }
 
     @Override
@@ -159,17 +170,38 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(AddExpr e) {
-        // TODO OR
+        e.e1().accept(this);
+        e.e2().accept(this);
+
+        String e1Register = getRegister(2);
+        String e2Register = getRegister(1);
+        String resultRegister = allocateRegister();
+
+        methodBuilder.appendBodyLine(String.format("%s = add i32 %s, %s", resultRegister, e2Register, e1Register));
     }
 
     @Override
     public void visit(SubtractExpr e) {
-        // TODO OR
+        e.e1().accept(this);
+        e.e2().accept(this);
+
+        String e1Register = getRegister(2);
+        String e2Register = getRegister(1);
+        String resultRegister = allocateRegister();
+
+        methodBuilder.appendBodyLine(String.format("%s = sub i32 %s, %s", resultRegister, e2Register, e1Register));
     }
 
     @Override
     public void visit(MultExpr e) {
-        // TODO OR
+        e.e1().accept(this);
+        e.e2().accept(this);
+
+        String e1Register = getRegister(2);
+        String e2Register = getRegister(1);
+        String resultRegister = allocateRegister();
+
+        methodBuilder.appendBodyLine(String.format("%s = mul i32 %s, %s", resultRegister, e2Register, e1Register));
     }
 
     @Override

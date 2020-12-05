@@ -16,7 +16,7 @@ public class LLVMVisitor implements Visitor {
     private LLVMUtil llvmUtil;
     private AstNodeUtil astNodeUtil;
     private MethodLLVMBuilder methodBuilder = new MethodLLVMBuilder();
-    private static int registerCounter = 0;
+    private int registerCounter = 0;
 
     public LLVMVisitor(OutputStream outputStream, LLVMUtil llvmUtil, AstNodeUtil astNodeUtil) {
         this.outputStream = outputStream;
@@ -24,10 +24,14 @@ public class LLVMVisitor implements Visitor {
         this.astNodeUtil = astNodeUtil;
     }
 
-    private static String allocateRegister() {
+    private String allocateRegister() {
         String registerName = "%_" + registerCounter;
         registerCounter += 1;
         return registerName;
+    }
+
+    private String getLastRegister() {
+        return registerCounter > 0 ? "%_" + (registerCounter - 1) :  "%_"+0;
     }
 
     @Override
@@ -73,14 +77,15 @@ public class LLVMVisitor implements Visitor {
         //body
         for (Statement statement : methodDecl.body()) {
             statement.accept(this);
-            methodBuilder.appendBodyNewLine("\n");
         }
 
         // return statement
-        methodBuilder.appendBodyNewLine("ret ");
         methodDecl.ret().accept(this); // TODO check how to decide which register
+        String retType = getTypeName(methodDecl.returnType());
+        String retRegister = getLastRegister();
+        methodBuilder.appendBodyLine(String.format("ret %s %s", retType, retRegister));
 
-        methodBuilder.appendBodyNewLine("\n}\n\n");
+        methodBuilder.appendBody("}\n");
 
         try {
             outputStream.write(methodBuilder.toString().getBytes());
@@ -96,20 +101,20 @@ public class LLVMVisitor implements Visitor {
     public void visit(FormalArg formalArg) {
         //Example: i32 %.x
         methodBuilder.appendDeclaration(getTypeName(formalArg.type()))
-                .appendDeclaration(String.format(" %%.%s\n", formalArg.name()));
+                .appendDeclaration(String.format(" %%.%s", formalArg.name()));
 
         //Example:  %x = alloca i32
         //          store i32 %.x, i32* %x
         String register = allocateRegister();
         String type = getTypeName(formalArg.type());
-        methodBuilder.appendBodyNewLine(String.format("%%%s = alloca %s\n", type, register));
-        methodBuilder.appendBodyNewLine(String.format("store %s %%.%s, %s* %s\n", type, formalArg.name(), type, register));
+        methodBuilder.appendBodyLine(String.format("%%%s = alloca %s", type, register));
+        methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, formalArg.name(), type, register));
 
     }
 
     @Override
     public void visit(VarDecl varDecl) {
-        methodBuilder.appendBodyNewLine(String.format("%%%s = alloca %s\n", varDecl.name(), getTypeName(varDecl.type())));
+        methodBuilder.appendBodyLine(String.format("%%%s = alloca %s", varDecl.name(), getTypeName(varDecl.type())));
     }
 
     @Override
@@ -184,7 +189,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IntegerLiteralExpr e) {
-        methodBuilder.appendBody(""+e.num());
+        methodBuilder.appendBodyLine(String.format("%s = add i32 %d, 0", allocateRegister(), e.num()));
     }
 
     @Override

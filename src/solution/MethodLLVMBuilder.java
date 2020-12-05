@@ -5,8 +5,8 @@ public class MethodLLVMBuilder {
     private StringBuilder declarationBuilder = new StringBuilder();
     private StringBuilder bodyBuilder = new StringBuilder();
 
-    public MethodLLVMBuilder appendBodyNewLine(String str) {
-        bodyBuilder.append("\t").append(str);
+    public MethodLLVMBuilder appendBodyLine(String str) {
+        bodyBuilder.append("\t").append(str).append("\n");
         return this;
     }
 

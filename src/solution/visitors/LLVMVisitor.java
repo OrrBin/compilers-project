@@ -172,41 +172,91 @@ public class LLVMVisitor implements Visitor {
         // TODO OR
     }
 
-    @Override
-    public void visit(AddExpr e) {
+ //region math-op expressions
+
+    private void zeroIntLiteral(BinaryExpr e, String op) {
         e.e1().accept(this);
         e.e2().accept(this);
 
-        String e1Register = registerCounter.getRegister(2);
-        String e2Register = registerCounter.getRegister(1);
-        String resultRegister = registerCounter.allocateRegister();
+        String e2Reg = registerCounter.getLastRegister();
+        String e1Reg = registerCounter.getRegister(2);
+        String newReg = registerCounter.allocateRegister();
 
-        methodBuilder.appendBodyLine(String.format("%s = add i32 %s, %s", resultRegister, e2Register, e1Register));
+       methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s",newReg, op, e1Reg, e2Reg));
+    }
+
+    private void oneIntLiteral(String op, boolean litOnRight, Expr e2, IntegerLiteralExpr e1) {
+
+        e2.accept(this);
+        String e2Reg = registerCounter.getLastRegister();
+
+        String newReg = registerCounter.allocateRegister();
+
+        int e1Number = e1.num();
+
+        //i.e. e1 is the right side of the expression
+        if (litOnRight) {
+            methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e2Reg, e1Number));
+        } else {
+            methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e1Number, e2Reg));
+        }
+    }
+
+    private void twoIntLiteral(String op, IntegerLiteralExpr e1, IntegerLiteralExpr e2) {
+        String newReg = registerCounter.allocateRegister();
+        int e1Number = e1.num();
+        int e2Number =e2.num();
+        methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e1Number, e2Number));
+    }
+
+    private void mathOp2LLVM(BinaryExpr e, String op) {
+        boolean litOnRight = true;
+
+        var e1 = e.e1();
+        var e2 = e.e2();
+        var e1Type = e.e1().getClass();
+        var e2Type = e.e2().getClass();
+
+        //case1: both are int-literals
+        if(e1 instanceof IntegerLiteralExpr && e2 instanceof IntegerLiteralExpr){
+            twoIntLiteral(op, (IntegerLiteralExpr) e1, (IntegerLiteralExpr) e2);
+        }
+        //case2: neither is int-literal
+        if(e1Type != IntegerLiteralExpr.class && e2Type != IntegerLiteralExpr.class){
+            zeroIntLiteral(e, op);
+        }
+        //case3: e1 is int-literal
+        else if(e1Type == IntegerLiteralExpr.class){
+            litOnRight = false;
+            Expr tmp = e1;
+            e1 = e2;
+            e2 = tmp;
+        }
+
+        //case4: e2 is int-literal
+        oneIntLiteral(op, litOnRight, e2, (IntegerLiteralExpr) e1);
     }
 
     @Override
+    public void visit(AddExpr e) {
+        String op = "add";
+        mathOp2LLVM(e, op);
+    }
+
+
+    @Override
     public void visit(SubtractExpr e) {
-        e.e1().accept(this);
-        e.e2().accept(this);
-
-        String e1Register = registerCounter.getRegister(2);
-        String e2Register = registerCounter.getRegister(1);
-        String resultRegister = registerCounter.allocateRegister();
-
-        methodBuilder.appendBodyLine(String.format("%s = sub i32 %s, %s", resultRegister, e2Register, e1Register));
+        String op = "sub";
+        mathOp2LLVM(e, op);
     }
 
     @Override
     public void visit(MultExpr e) {
-        e.e1().accept(this);
-        e.e2().accept(this);
-
-        String e1Register = registerCounter.getRegister(2);
-        String e2Register = registerCounter.getRegister(1);
-        String resultRegister = registerCounter.allocateRegister();
-
-        methodBuilder.appendBodyLine(String.format("%s = mul i32 %s, %s", resultRegister, e2Register, e1Register));
+        String op = "mult";
+        mathOp2LLVM(e, op);
     }
+
+    //endregion
 
     @Override
     public void visit(ArrayAccessExpr e) {
@@ -240,7 +290,11 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IdentifierExpr e) {
-
+//        var symbolTableScope = astNodeUtil.getEnclosingScope(e);
+//        var id = e.id();
+//        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromCurUse(SymbolKeyType.VAR, id, e);
+//        AstType type = declNode.type();
+//        methodBuilder.appendBodyLine(String.format("%s = load %s, %s* %%%s", allocateRegister(), type, type, id));
     }
 
     @Override

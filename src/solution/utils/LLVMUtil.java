@@ -53,22 +53,32 @@ public class LLVMUtil {
         return String.format("%%%s = alloca %s", name, type);
     }
 
-    public String add(String registerRes, String register1, String register2){
-        return String.format("%s = add i32 %s, %s", registerRes, register1, register2);
+    public String op(ArithmeticOp arithmeticOp,String registerRes, String register1, String register2){
+        return String.format("%s = %s i32 %s, %s", registerRes, arithmeticOp, register1, register2);
     }
 
-    public String add(String registerRes, String register, int num){
-        return String.format("%s = add i32 %s, %d", registerRes, register, num);
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String register, int num){
+        return String.format("%s = %s i32 %s, %d", registerRes, arithmeticOp, register, num);
     }
 
-    public String add(String registerRes, int num, String register){
-        return String.format("%s = add i32 %d, %s", registerRes, num, register);
+    public String op(ArithmeticOp arithmeticOp, String registerRes, int num, String register){
+        return String.format("%s = %s i32 %d, %s", registerRes, arithmeticOp, num, register);
     }
 
-    public String add(String registerRes, int num1, int num2){
-        return String.format("%s = add i32 %d, %d", registerRes, num1, num2);
+    public String op(ArithmeticOp arithmeticOp, String registerRes, int num1, int num2){
+        return String.format("%s = %s i32 %d, %d", registerRes, arithmeticOp, num1, num2);
     }
 
     // endregion
+
+    public enum ArithmeticOp {
+        ADD("add"), MUL("mul"), SUB("sub");
+
+        public final String op;
+
+        private ArithmeticOp(String op) {
+            this.op = op;
+        }
+    }
 
 }

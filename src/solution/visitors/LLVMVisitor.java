@@ -10,6 +10,7 @@ import solution.utils.RegisterCounter;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import static solution.utils.LLVMUtil.ArithmeticOp.ADD;
 import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
@@ -224,17 +225,17 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IntegerLiteralExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(), e.num(),0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), e.num(), 0));
     }
 
     @Override
     public void visit(TrueExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(),1,0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), 1, 0));
     }
 
     @Override
     public void visit(FalseExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(),0,0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), 0, 0));
     }
 
     @Override

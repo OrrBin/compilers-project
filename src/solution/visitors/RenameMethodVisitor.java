@@ -1,14 +1,13 @@
 package solution.visitors;
 
 import ast.*;
-import solution.AstNodeUtil;
 import solution.RenameOpParams;
 import solution.actions.MethodCallRenameOp;
 import solution.actions.MethodDeclRenameOp;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
+import solution.utils.AstNodeUtil;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

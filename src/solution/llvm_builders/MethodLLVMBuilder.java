@@ -1,17 +1,28 @@
-package solution;
+package solution.llvm_builders;
 
 public class MethodLLVMBuilder {
 
     private StringBuilder declarationBuilder = new StringBuilder();
     private StringBuilder bodyBuilder = new StringBuilder();
 
+    public MethodLLVMBuilder appendBody(String str) {
+        bodyBuilder.append(str);
+        return this;
+    }
+
     public MethodLLVMBuilder appendBodyLine(String str) {
         bodyBuilder.append("\t").append(str).append("\n");
         return this;
     }
 
-    public MethodLLVMBuilder appendBody(String str) {
-        bodyBuilder.append(str);
+    // same as appendBodyLine but without Enter in the end
+    public MethodLLVMBuilder appendPartialBodyLine(String str) {
+        bodyBuilder.append("\t").append(str);
+        return this;
+    }
+
+    public MethodLLVMBuilder appendLabel(String label) {
+        bodyBuilder.append(label + ":").append("\n");
         return this;
     }
 

@@ -1,9 +1,9 @@
 package solution.visitors;
 
 import ast.*;
-import solution.AstNodeUtil;
 import solution.RenameOpParams;
 import solution.actions.*;
+import solution.utils.AstNodeUtil;
 
 import java.util.List;
 

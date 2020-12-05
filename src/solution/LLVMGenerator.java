@@ -1,6 +1,8 @@
 package solution;
 
 import ast.Program;
+import solution.utils.AstNodeUtil;
+import solution.utils.LLVMUtil;
 import solution.visitors.LLVMVisitor;
 import solution.visitors.VTableVisitor;
 

@@ -1,12 +1,13 @@
-package solution;
+package solution.utils;
 
 import ast.*;
+import solution.SymbolTablesManager;
+import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
-import solution.symbol_table.symbol_types.Symbol;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AstNodeUtil {
 

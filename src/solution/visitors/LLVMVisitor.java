@@ -1,14 +1,16 @@
 package solution.visitors;
 
 import ast.*;
-import solution.AstNodeUtil;
-import solution.MethodLLVMBuilder;
-import solution.LLVMUtil;
+import solution.llvm_builders.MethodLLVMBuilder;
+import solution.utils.AstNodeUtil;
+import solution.utils.LLVMUtil;
+import solution.utils.LabelCounter;
+import solution.utils.RegisterCounter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static solution.LLVMUtil.getTypeName;
+import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
 
@@ -16,33 +18,13 @@ public class LLVMVisitor implements Visitor {
     private LLVMUtil llvmUtil;
     private AstNodeUtil astNodeUtil;
     private MethodLLVMBuilder methodBuilder = new MethodLLVMBuilder();
-    private int registerCounter = 0;
+    private RegisterCounter registerCounter = new RegisterCounter();
+    private LabelCounter labelCounter = new LabelCounter();
 
     public LLVMVisitor(OutputStream outputStream, LLVMUtil llvmUtil, AstNodeUtil astNodeUtil) {
         this.outputStream = outputStream;
         this.llvmUtil = llvmUtil;
         this.astNodeUtil = astNodeUtil;
-    }
-
-    private String allocateRegister() {
-        String registerName = "%_" + registerCounter;
-        registerCounter += 1;
-        return registerName;
-    }
-
-    private String getLastRegister() {
-        if (registerCounter > 0 ) {
-            return "%_" + (registerCounter - 1);
-        }
-
-        throw new IllegalArgumentException("Asked for last register but no register used yet");
-    }
-
-    private String getRegister(int offset) {
-        if (registerCounter >= offset)
-            return "%_" + (registerCounter - offset);
-
-        throw new IllegalArgumentException(String.format("Last register is %d but got offset %d", registerCounter-1, offset));
     }
 
     @Override
@@ -93,7 +75,7 @@ public class LLVMVisitor implements Visitor {
         // return statement
         methodDecl.ret().accept(this); // TODO check how to decide which register
         String retType = getTypeName(methodDecl.returnType());
-        String retRegister = getLastRegister();
+        String retRegister = registerCounter.getLastRegister();
         methodBuilder.appendBodyLine(String.format("ret %s %s", retType, retRegister));
 
         methodBuilder.appendBody("}\n");
@@ -104,28 +86,30 @@ public class LLVMVisitor implements Visitor {
             e.printStackTrace();
         }
 
+        // clean up
         methodBuilder.clear();
-        registerCounter = 0;
+        registerCounter.resetRegisterCounter();
+        labelCounter.resetRegisterCounter();;
     }
 
     @Override
     public void visit(FormalArg formalArg) {
         //Example: i32 %.x
+        String name = formalArg.name();
         methodBuilder.appendDeclaration(getTypeName(formalArg.type()))
-                .appendDeclaration(String.format(" %%.%s", formalArg.name()));
+                .appendDeclaration(String.format(" %%.%s", name));
 
         //Example:  %x = alloca i32
         //          store i32 %.x, i32* %x
-        String register = allocateRegister();
         String type = getTypeName(formalArg.type());
-        methodBuilder.appendBodyLine(String.format("%%%s = alloca %s", type, register));
-        methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, formalArg.name(), type, register));
+        methodBuilder.appendBodyLine(llvmUtil.alloca(name, type));
+        methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, name, type, name));
 
     }
 
     @Override
     public void visit(VarDecl varDecl) {
-        methodBuilder.appendBodyLine(String.format("%%%s = alloca %s", varDecl.name(), getTypeName(varDecl.type())));
+        methodBuilder.appendBodyLine(llvmUtil.alloca(varDecl.name(), getTypeName(varDecl.type())));
     }
 
     @Override
@@ -135,7 +119,26 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
-        // TODO OZ
+        String register = registerCounter.allocateRegister();
+        String if0 = "if" + labelCounter.allocateLabelNumber();
+        String if1 = "if" + labelCounter.allocateLabelNumber();
+        String if2 = "if" + labelCounter.allocateLabelNumber();
+
+
+        // condition
+        methodBuilder.appendPartialBodyLine(String.format("%s = ", register));
+        ifStatement.cond().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(register, if0, if1));
+
+        // labels
+        methodBuilder.appendLabel(if0);
+        ifStatement.thencase().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(if2));
+        methodBuilder.appendLabel(if1);
+        ifStatement.elsecase().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(if2));
+        methodBuilder.appendLabel(if2);
+
     }
 
     @Override
@@ -173,9 +176,9 @@ public class LLVMVisitor implements Visitor {
         e.e1().accept(this);
         e.e2().accept(this);
 
-        String e1Register = getRegister(2);
-        String e2Register = getRegister(1);
-        String resultRegister = allocateRegister();
+        String e1Register = registerCounter.getRegister(2);
+        String e2Register = registerCounter.getRegister(1);
+        String resultRegister = registerCounter.allocateRegister();
 
         methodBuilder.appendBodyLine(String.format("%s = add i32 %s, %s", resultRegister, e2Register, e1Register));
     }
@@ -185,9 +188,9 @@ public class LLVMVisitor implements Visitor {
         e.e1().accept(this);
         e.e2().accept(this);
 
-        String e1Register = getRegister(2);
-        String e2Register = getRegister(1);
-        String resultRegister = allocateRegister();
+        String e1Register = registerCounter.getRegister(2);
+        String e2Register = registerCounter.getRegister(1);
+        String resultRegister = registerCounter.allocateRegister();
 
         methodBuilder.appendBodyLine(String.format("%s = sub i32 %s, %s", resultRegister, e2Register, e1Register));
     }
@@ -197,9 +200,9 @@ public class LLVMVisitor implements Visitor {
         e.e1().accept(this);
         e.e2().accept(this);
 
-        String e1Register = getRegister(2);
-        String e2Register = getRegister(1);
-        String resultRegister = allocateRegister();
+        String e1Register = registerCounter.getRegister(2);
+        String e2Register = registerCounter.getRegister(1);
+        String resultRegister = registerCounter.allocateRegister();
 
         methodBuilder.appendBodyLine(String.format("%s = mul i32 %s, %s", resultRegister, e2Register, e1Register));
     }
@@ -221,17 +224,17 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IntegerLiteralExpr e) {
-        methodBuilder.appendBodyLine(String.format("%s = add i32 %d, 0", allocateRegister(), e.num()));
+        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(), e.num(),0));
     }
 
     @Override
     public void visit(TrueExpr e) {
-        methodBuilder.appendBodyLine(String.format("%s = add i32 1, 0", allocateRegister()));
+        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(),1,0));
     }
 
     @Override
     public void visit(FalseExpr e) {
-        methodBuilder.appendBodyLine(String.format("%s = add i32 1, 0", allocateRegister()));
+        methodBuilder.appendBodyLine(llvmUtil.add(registerCounter.allocateRegister(),0,0));
     }
 
     @Override

@@ -1,8 +1,6 @@
-package solution;
+package solution.utils;
 
 import ast.AstNode;
-import ast.Program;
-import ast.VarDecl;
 
 //TODO: Orr
 public interface ProgramCrawler {

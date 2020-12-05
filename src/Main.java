@@ -1,11 +1,13 @@
-import ast.*;
-import solution.AstNodeUtil;
+import ast.AstPrintVisitor;
+import ast.AstXMLSerializer;
+import ast.Program;
 import solution.LLVMGenerator;
 import solution.RenameOpParams;
 import solution.Renamer;
 import solution.SymbolTablesManager;
 import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.SymbolTablePreInitVisitor;
+import solution.utils.AstNodeUtil;
 
 import java.io.*;
 

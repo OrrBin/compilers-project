@@ -1,12 +1,10 @@
 package solution;
 
-import ast.AstNode;
-import ast.ClassDecl;
-import ast.MethodDecl;
-import ast.Program;
-import ast.VariableIntroduction;
+import ast.*;
 import solution.actions.RenameOp;
 import solution.symbol_table.symbol_table_types.SymbolTable;
+import solution.utils.AstNodeUtil;
+import solution.utils.ProgramCrawler;
 import solution.visitors.RenameFieldVariableVisitor;
 import solution.visitors.RenameLocalVariableVisitor;
 import solution.visitors.RenameMethodVisitor;

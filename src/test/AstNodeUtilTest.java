@@ -2,10 +2,10 @@ package test;
 
 import ast.AstXMLSerializer;
 import ast.Program;
-import solution.AstNodeUtil;
 import solution.SymbolTablesManager;
 import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.SymbolTablePreInitVisitor;
+import solution.utils.AstNodeUtil;
 
 import java.io.File;
 

@@ -1,45 +1,13 @@
 package solution.visitors;
 
-import ast.AddExpr;
-import ast.AndExpr;
-import ast.ArrayAccessExpr;
-import ast.ArrayLengthExpr;
-import ast.AssignArrayStatement;
-import ast.AssignStatement;
-import ast.BlockStatement;
-import ast.BoolAstType;
-import ast.ClassDecl;
-import ast.FalseExpr;
-import ast.FormalArg;
-import ast.IdentifierExpr;
-import ast.IfStatement;
-import ast.IntArrayAstType;
-import ast.IntAstType;
-import ast.IntegerLiteralExpr;
-import ast.LtExpr;
-import ast.MainClass;
-import ast.MethodCallExpr;
-import ast.MethodDecl;
-import ast.MultExpr;
-import ast.NewIntArrayExpr;
-import ast.NewObjectExpr;
-import ast.NotExpr;
-import ast.Program;
-import ast.RefType;
-import ast.SubtractExpr;
-import ast.SysoutStatement;
-import ast.ThisExpr;
-import ast.TrueExpr;
-import ast.VarDecl;
-import ast.Visitor;
-import ast.WhileStatement;
-import solution.AstNodeUtil;
+import ast.*;
+import solution.utils.AstNodeUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedHashMap;
 
-import static solution.LLVMUtil.getTypeName;
+import static solution.utils.LLVMUtil.getTypeName;
 
 public class VTableVisitor implements Visitor {
 

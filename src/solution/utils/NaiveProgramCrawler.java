@@ -1,4 +1,4 @@
-package solution;
+package solution.utils;
 
 import ast.AstNode;
 import ast.Program;

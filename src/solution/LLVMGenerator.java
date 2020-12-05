@@ -1,6 +1,7 @@
 package solution;
 
 import ast.Program;
+import solution.visitors.LLVMVisitor;
 import solution.visitors.VTableVisitor;
 
 import java.io.OutputStream;
@@ -17,6 +18,8 @@ public class LLVMGenerator {
 
     public void generate(OutputStream outputStream) {
         VTableVisitor vtableVisitor = new VTableVisitor(outputStream, util);
+        LLVMVisitor llvmVisitor = new LLVMVisitor(outputStream, new LLVMUtil(), util);
         program.accept(vtableVisitor);
+        program.accept(llvmVisitor);
     }
 }

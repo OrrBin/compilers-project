@@ -2,6 +2,8 @@ package solution.utils;
 
 import ast.*;
 
+import static solution.utils.LLVMUtil.ArithmeticOp.ADD;
+
 public class LLVMUtil {
 
     public String toLLVM(AstNode astNode) {
@@ -80,6 +82,10 @@ public class LLVMUtil {
         private ArithmeticOp(String op) {
             this.op = op;
         }
-    }
 
+        @Override
+        public String toString() {
+            return op;
+        }
+    }
 }

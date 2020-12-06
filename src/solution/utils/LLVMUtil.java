@@ -2,8 +2,6 @@ package solution.utils;
 
 import ast.*;
 
-import static solution.utils.LLVMUtil.ArithmeticOp.ADD;
-
 public class LLVMUtil {
 
     public String toLLVM(AstNode astNode) {
@@ -22,7 +20,7 @@ public class LLVMUtil {
         return res;
     }
 
-    public static String getTypeName(AstType type) {
+    public String getTypeName(AstType type) {
         if (type == null) {
             return "void";
         }
@@ -40,6 +38,23 @@ public class LLVMUtil {
         }
 
         throw new IllegalArgumentException("Unknown type");
+    }
+
+    public boolean isSimpleType(Expr expr){
+        return expr instanceof IntegerLiteralExpr || expr instanceof TrueExpr || expr instanceof FalseExpr;
+    }
+
+    public int simpleTypeToInt(Expr expr){
+        if (expr instanceof IntegerLiteralExpr){
+            return ((IntegerLiteralExpr) expr).num();
+        }
+        if (expr instanceof TrueExpr){
+            return 1;
+        }
+        if (expr instanceof FalseExpr){
+            return 0;
+        }
+        throw new IllegalArgumentException(expr.getClass().getName() + " isn't a simple type (IntegerLiteralExpr, TrueExpr, FalseExpr)");
     }
 
     // region create llvm commands
@@ -70,6 +85,30 @@ public class LLVMUtil {
 
     public String op(ArithmeticOp arithmeticOp, String registerRes, int num1, int num2) {
         return String.format("%s = %s i32 %d, %d", registerRes, arithmeticOp, num1, num2);
+    }
+
+    public String print(String register) {
+        return String.format("call void (i32) @print_int(%s)", register);
+    }
+
+    public String print(int num) {
+        return String.format("call void (i32) @print_int(%d)", num);
+    }
+
+    public String store(String type, int value, String register) {
+        return String.format("store %s , %d %s", type, value, register);
+    }
+
+    public String store(String type, String valueRegister, String register) {
+        return String.format("store %s , %d %s", type, valueRegister, register);
+    }
+
+    public String load(String registerRes, String type, String register) {
+        return String.format("%s = load %s , %s* %s", registerRes, type, type, register);
+    }
+
+    public String throw_oob() {
+        return "call void @throw_oob()";
     }
 
     // endregion

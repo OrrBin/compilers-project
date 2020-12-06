@@ -103,23 +103,27 @@ public class SymbolTableInitVisitor implements Visitor {
         curScopeStack.push(classDecl);
 
         //fields declarations
-        for(VarDecl field: classDecl.fields()) {
+        if (classDecl.fields() != null) {
+            for (VarDecl field : classDecl.fields()) {
 
-            //Creating varSymbol for each field
-            Symbol varSymbol = new VarSymbol(field, VariableType.FIELD);
-            classSymbolTable.addSymbol2Table(varSymbol);
+                //Creating varSymbol for each field
+                Symbol varSymbol = new VarSymbol(field, VariableType.FIELD);
+                classSymbolTable.addSymbol2Table(varSymbol);
 
-            field.accept(this);
+                field.accept(this);
+            }
         }
 
         //methods declarations
-        for(MethodDecl method : classDecl.methoddecls()){
+        if (classDecl.methoddecls() != null) {
+            for (MethodDecl method : classDecl.methoddecls()) {
 
-            //Creating methodSymbol for each method
-            Symbol methodSymbol = new MethodSymbol(method);
-            classSymbolTable.addSymbol2Table(methodSymbol);
+                //Creating methodSymbol for each method
+                Symbol methodSymbol = new MethodSymbol(method);
+                classSymbolTable.addSymbol2Table(methodSymbol);
 
-            method.accept(this);
+                method.accept(this);
+            }
         }
 
         //update curScopeStack

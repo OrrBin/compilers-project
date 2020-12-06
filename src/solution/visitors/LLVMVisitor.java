@@ -2,6 +2,7 @@ package solution.visitors;
 
 import ast.*;
 import solution.llvm_builders.MethodLLVMBuilder;
+import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
 import solution.utils.LLVMUtil;
 import solution.utils.LabelCounter;
@@ -290,11 +291,11 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IdentifierExpr e) {
-//        var symbolTableScope = astNodeUtil.getEnclosingScope(e);
-//        var id = e.id();
-//        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromCurUse(SymbolKeyType.VAR, id, e);
-//        AstType type = declNode.type();
-//        methodBuilder.appendBodyLine(String.format("%s = load %s, %s* %%%s", allocateRegister(), type, type, id));
+        var symbolTableScope = astNodeUtil.getEnclosingScope(e);
+        var id = e.id();
+        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromCurUse(SymbolKeyType.VAR, id, e);
+        AstType type = declNode.type();
+        methodBuilder.appendBodyLine(String.format("%s = load %s, %s* %%%s", registerCounter.allocateRegister(), type, type, id));
     }
 
     @Override

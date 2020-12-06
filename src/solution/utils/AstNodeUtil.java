@@ -5,6 +5,8 @@ import solution.SymbolTablesManager;
 import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
+import solution.symbol_table.symbol_types.SymbolKey;
+import solution.symbol_table.symbol_types.SymbolKeyType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -177,7 +179,6 @@ public class AstNodeUtil {
     // region Methods
     // endregion
 
-
     // region findByLineNum
 
     boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber, boolean isMethod) {
@@ -230,6 +231,9 @@ public class AstNodeUtil {
         throw new IllegalArgumentException("Probably no line number");
     }
 
+    // endregion
+
+
     // find class inhering hierarchy (including the current class)
     public List<ClassDecl> getClassHierarchy(AstNode astNode) {
         List<ClassDecl> hierarchy = new ArrayList<>();
@@ -246,5 +250,19 @@ public class AstNodeUtil {
         return hierarchy;
     }
 
+    public AstNode getDeclFromCurUse(SymbolKeyType symbolKeyType, String id, AstNode curNode){
+
+        var symbolKey = new SymbolKey(id, symbolKeyType);
+        var symbolTableScope = getEnclosingScope(curNode);
+        var entries = symbolTableScope.entries;
+
+        while (!entries.containsKey(symbolKey)){
+            symbolTableScope = symbolTableScope.parentSymbolTable;
+            entries = symbolTableScope.entries;
+        }
+
+        //found declaration scope
+        return entries.get(symbolKey).node;
+    }
 }
 

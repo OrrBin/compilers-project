@@ -3,12 +3,13 @@ package solution.utils;
 import ast.*;
 
 public class LLVMUtil {
-    public String toLLVM(AstNode astNode){
+
+    public String toLLVM(AstNode astNode) {
         String res;
         String className = astNode.getClass().getName();
         switch (className) {
             case "AstType":
-                res = getTypeName((AstType)astNode);
+                res = getTypeName((AstType) astNode);
                 break;
             case "MethodDecl":
                 res = "";
@@ -53,26 +54,26 @@ public class LLVMUtil {
         return String.format("%%%s = alloca %s", name, type);
     }
 
-    public String op(ArithmeticOp arithmeticOp,String registerRes, String register1, String register2){
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String register1, String register2) {
         return String.format("%s = %s i32 %s, %s", registerRes, arithmeticOp, register1, register2);
     }
 
-    public String op(ArithmeticOp arithmeticOp, String registerRes, String register, int num){
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String register, int num) {
         return String.format("%s = %s i32 %s, %d", registerRes, arithmeticOp, register, num);
     }
 
-    public String op(ArithmeticOp arithmeticOp, String registerRes, int num, String register){
+    public String op(ArithmeticOp arithmeticOp, String registerRes, int num, String register) {
         return String.format("%s = %s i32 %d, %s", registerRes, arithmeticOp, num, register);
     }
 
-    public String op(ArithmeticOp arithmeticOp, String registerRes, int num1, int num2){
+    public String op(ArithmeticOp arithmeticOp, String registerRes, int num1, int num2) {
         return String.format("%s = %s i32 %d, %d", registerRes, arithmeticOp, num1, num2);
     }
 
     // endregion
 
     public enum ArithmeticOp {
-        ADD("add"), MUL("mul"), SUB("sub");
+        ADD("add"), MUL("mul"), SUB("sub"), SLT("icmp slt");
 
         public final String op;
 

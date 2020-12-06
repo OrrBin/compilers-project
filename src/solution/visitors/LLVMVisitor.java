@@ -11,7 +11,7 @@ import solution.utils.RegisterCounter;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static solution.utils.LLVMUtil.ArithmeticOp.ADD;
+import static solution.utils.LLVMUtil.ArithmeticOp.*;
 import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
@@ -121,16 +121,13 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
-        String register = registerCounter.allocateRegister();
         String if0 = "if" + labelCounter.allocateLabelNumber();
         String if1 = "if" + labelCounter.allocateLabelNumber();
         String if2 = "if" + labelCounter.allocateLabelNumber();
 
-
         // condition
-        methodBuilder.appendPartialBodyLine(String.format("%s = ", register));
         ifStatement.cond().accept(this);
-        methodBuilder.appendBodyLine(llvmUtil.br(register, if0, if1));
+        methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), if0, if1));
 
         // labels
         methodBuilder.appendLabel(if0);
@@ -140,7 +137,6 @@ public class LLVMVisitor implements Visitor {
         ifStatement.elsecase().accept(this);
         methodBuilder.appendBodyLine(llvmUtil.br(if2));
         methodBuilder.appendLabel(if2);
-
     }
 
     @Override
@@ -170,23 +166,22 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(LtExpr e) {
-        // TODO OR
+        mathOp2LLVM(e, SLT);
     }
 
  //region math-op expressions
 
-    private void zeroIntLiteral(BinaryExpr e, String op) {
+    private void zeroIntLiteral(BinaryExpr e, LLVMUtil.ArithmeticOp op) {
         e.e1().accept(this);
+        String e1Reg = registerCounter.getLastRegister();
         e.e2().accept(this);
-
         String e2Reg = registerCounter.getLastRegister();
-        String e1Reg = registerCounter.getRegister(2);
         String newReg = registerCounter.allocateRegister();
 
-       methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s",newReg, op, e1Reg, e2Reg));
+        methodBuilder.appendBodyLine(String.format(llvmUtil.op(op, newReg, e1Reg, e2Reg)));
     }
 
-    private void oneIntLiteral(String op, boolean litOnRight, Expr e2, IntegerLiteralExpr e1) {
+    private void oneIntLiteral(LLVMUtil.ArithmeticOp op, boolean litOnRight, Expr e2, IntegerLiteralExpr e1) {
 
         e2.accept(this);
         String e2Reg = registerCounter.getLastRegister();
@@ -197,20 +192,20 @@ public class LLVMVisitor implements Visitor {
 
         //i.e. e1 is the right side of the expression
         if (litOnRight) {
-            methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e2Reg, e1Number));
+            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e2Reg, e1Number));
         } else {
-            methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e1Number, e2Reg));
+            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Reg));
         }
     }
 
-    private void twoIntLiteral(String op, IntegerLiteralExpr e1, IntegerLiteralExpr e2) {
+    private void twoIntLiteral(LLVMUtil.ArithmeticOp op, IntegerLiteralExpr e1, IntegerLiteralExpr e2) {
         String newReg = registerCounter.allocateRegister();
         int e1Number = e1.num();
         int e2Number =e2.num();
-        methodBuilder.appendBodyLine(String.format("%s = %s i32 %s, %s", newReg, op, e1Number, e2Number));
+        methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Number));
     }
 
-    private void mathOp2LLVM(BinaryExpr e, String op) {
+    private void mathOp2LLVM(BinaryExpr e, LLVMUtil.ArithmeticOp op) {
         boolean litOnRight = true;
 
         var e1 = e.e1();
@@ -240,21 +235,18 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(AddExpr e) {
-        String op = "add";
-        mathOp2LLVM(e, op);
+        mathOp2LLVM(e, ADD);
     }
 
 
     @Override
     public void visit(SubtractExpr e) {
-        String op = "sub";
-        mathOp2LLVM(e, op);
+        mathOp2LLVM(e, SUB);
     }
 
     @Override
     public void visit(MultExpr e) {
-        String op = "mult";
-        mathOp2LLVM(e, op);
+        mathOp2LLVM(e, MUL);
     }
 
     //endregion

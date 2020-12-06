@@ -15,12 +15,6 @@ public class MethodLLVMBuilder {
         return this;
     }
 
-    // same as appendBodyLine but without Enter in the end
-    public MethodLLVMBuilder appendPartialBodyLine(String str) {
-        bodyBuilder.append("\t").append(str);
-        return this;
-    }
-
     public MethodLLVMBuilder appendLabel(String label) {
         bodyBuilder.append(label + ":").append("\n");
         return this;

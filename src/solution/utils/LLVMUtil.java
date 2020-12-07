@@ -104,6 +104,21 @@ public class LLVMUtil {
                 targetReg, eType, ePtr, eName, startIdx, endIdx);
     }
 
+    public String getElementPtr(String targetReg, String type, String registerBase, int offset){
+        return String.format("%s = getelementptr %s, %s* %s, %s %d",
+                targetReg, type, type, registerBase, type, offset);
+    }
+
+
+    public String getElementPtr(String targetReg, String type, String registerBase, String registeroffset){
+        return String.format("%s = getelementptr %s, %s* %s, %s %s",
+                targetReg, type, type, registerBase, type, registeroffset);
+    }
+
+    public String store(String eType, String fromReg, String addressType, String toReg){
+        return String.format("store %s %%%s, %s %%%s", eType, fromReg, addressType, toReg);
+    }
+
     public String load(String targetReg, String eType, String addressType, String fromReg){
         return String.format("%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
     }
@@ -137,21 +152,20 @@ public class LLVMUtil {
     }
 
     public String store(String type, String valueRegister, String register) {
-        return String.format("store %s, %s %%%s", type, valueRegister, register);
-    }
-
-    public String store(String eType, String fromReg, String addressType, String toReg){
-        return String.format("store %s %s, %s %s", eType, fromReg, addressType, toReg);
+        return String.format("store %s %s, %s* %s", type, valueRegister, type, register);
     }
 
     public String load(String registerRes, String type, String register) {
-        return String.format("%s = load %s , %s* %s", registerRes, type, type, register);
+        return String.format("%s = load %s, %s* %s", registerRes, type, type, register);
     }
 
     public String throw_oob() {
         return "call void @throw_oob()";
     }
 
+    public String ret(String retType, String retRegister) {
+        return String.format("ret %s %s", retType, retRegister);
+    }
     // endregion
 
     public enum ArithmeticOp {

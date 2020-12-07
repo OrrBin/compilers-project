@@ -20,7 +20,7 @@ public class LLVMUtil {
         return res;
     }
 
-    public String getTypeName(AstType type) {
+    public static String getTypeName(AstType type) {
         if (type == null) {
             return "void";
         }
@@ -92,24 +92,20 @@ public class LLVMUtil {
     }
 
     public String calloc(String targetReg, int numOfObjects, int size){
-        return String.format("%%%s = call i8* @calloc i32 %d, i32 %d", targetReg, numOfObjects, size);
+        return String.format("%s = call i8* @calloc i32 %d, i32 %d", targetReg, numOfObjects, size);
     }
 
     public String bitcast(String targetReg, String fromType, String reg2Cast, String toType){
-        return String.format("%%%s = bitcast %%%s %s to %s", targetReg, fromType, reg2Cast, toType);
+        return String.format("%s = bitcast %s %s to %s", targetReg, fromType, reg2Cast, toType);
     }
 
     public String getElementPtr(String targetReg, String eType, String ePtr, String eName, int startIdx, int endIdx){
-        return String.format("%%%s = getelementptr %s , %s @%s, i32 %d, i32 %d",
+        return String.format("%s = getelementptr %s, %s @.%s, i32 %d, i32 %d",
                 targetReg, eType, ePtr, eName, startIdx, endIdx);
     }
 
-    public String store(String eType, String fromReg, String addressType, String toReg){
-        return String.format("store %s %%%s, %s %%%s", eType, fromReg, addressType, toReg);
-    }
-
     public String load(String targetReg, String eType, String addressType, String fromReg){
-        return String.format("%%%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
+        return String.format("%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
     }
 
     public String op(ArithmeticOp arithmeticOp, String registerRes, String register1, String register2) {
@@ -137,11 +133,15 @@ public class LLVMUtil {
     }
 
     public String store(String type, int value, String register) {
-        return String.format("store %s , %d %s", type, value, register);
+        return String.format("store %s, %d %s", type, value, register);
     }
 
     public String store(String type, String valueRegister, String register) {
-        return String.format("store %s , %d %s", type, valueRegister, register);
+        return String.format("store %s, %s %%%s", type, valueRegister, register);
+    }
+
+    public String store(String eType, String fromReg, String addressType, String toReg){
+        return String.format("store %s %s, %s %s", eType, fromReg, addressType, toReg);
     }
 
     public String load(String registerRes, String type, String register) {

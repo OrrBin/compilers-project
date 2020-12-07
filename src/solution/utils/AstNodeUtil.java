@@ -5,11 +5,12 @@ import solution.SymbolTablesManager;
 import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
+import solution.symbol_table.symbol_table_types.SymbolTable4Prog;
 import solution.symbol_table.symbol_types.SymbolKey;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.image.BandedSampleModel;
+import java.util.*;
 
 public class AstNodeUtil {
 
@@ -97,6 +98,32 @@ public class AstNodeUtil {
         List<ClassDecl> extendingClasses = getExtendingClassesHelper(classDecl);
         extendingClasses.remove(classDecl);
         return extendingClasses;
+    }
+
+    public int getNumOfMethods(ClassDecl classDecl) {
+        Set<String> methodNames = new HashSet<>();
+        Stack<ClassDecl> ancestorClassPath = new Stack<>();
+        ancestorClassPath.push(classDecl);
+
+        ClassDecl curClass;
+        var parentClass = getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
+
+        //climb up the ancestor tree till reaching root
+        while(parentClass != null){
+            if(parentClass instanceof Program) {break;}
+
+            curClass = (ClassDecl)parentClass;
+            ancestorClassPath.push(curClass);
+            parentClass = getEnclosingScope(curClass).parentSymbolTable.symbolTableScope;
+        }
+        //now curClass is the first super class
+        //descending the path and collecting methods
+
+        while(!ancestorClassPath.empty()){
+            curClass = ancestorClassPath.pop();
+            curClass.methoddecls().forEach(methodDecl -> methodNames.add(methodDecl.name()));
+        }
+        return methodNames.size();
     }
 
     // endregion
@@ -264,5 +291,29 @@ public class AstNodeUtil {
         //found declaration scope
         return entries.get(symbolKey).node;
     }
+
+    //temporary. TODO: refactor
+    public ClassDecl getClassDeclFromId(Expr e, String classId) {
+        var curSymbolTable = getEnclosingScope(e);
+        var parentSymbolTable = curSymbolTable.parentSymbolTable;
+        ClassDecl classDecl = null;
+
+        while(parentSymbolTable != null){
+            curSymbolTable = parentSymbolTable;
+            parentSymbolTable = curSymbolTable.parentSymbolTable;
+        }
+        //program's symbolTable
+        var progSymbolTable = (SymbolTable4Prog)curSymbolTable;
+        var entries = progSymbolTable.entries;
+        var keySet = entries.keySet();
+
+        //go over all symbols (classes) to locate classId
+        for(SymbolKey symbolKey : keySet){
+            if(!symbolKey.name.equals(classId)){ continue;}
+            classDecl = (ClassDecl) entries.get(symbolKey).node;
+        }
+        return classDecl;
+    }
+
 }
 

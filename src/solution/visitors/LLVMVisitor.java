@@ -10,6 +10,9 @@ import solution.utils.RegisterCounter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 import static solution.utils.LLVMUtil.ArithmeticOp.*;
 
@@ -325,6 +328,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
+
 
     }
 

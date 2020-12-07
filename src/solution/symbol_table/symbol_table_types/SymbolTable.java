@@ -1,6 +1,7 @@
 package solution.symbol_table.symbol_table_types;
 
 import ast.AstNode;
+import ast.ClassDecl;
 import ast.MethodDecl;
 import solution.symbol_table.symbol_types.Symbol;
 import solution.symbol_table.symbol_types.SymbolKey;
@@ -27,6 +28,7 @@ public abstract class SymbolTable {
         var symbolNode = symbol.node;
         //symbol can only be a method or a field
         if(symbolNode instanceof MethodDecl) {return SymbolKeyType.METHOD;}
+        else if(symbolNode instanceof ClassDecl) {return SymbolKeyType.CLASS;}
         return SymbolKeyType.VAR;
     }
 

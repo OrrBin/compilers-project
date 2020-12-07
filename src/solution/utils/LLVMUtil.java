@@ -42,6 +42,26 @@ public class LLVMUtil {
         throw new IllegalArgumentException("Unknown type");
     }
 
+    public int getTypeSize(AstType type) {
+        if (type == null) {
+            return 0;
+        }
+        if (type instanceof IntAstType) {
+            return 4;
+        }
+        if (type instanceof BoolAstType) {
+            return 1;
+        }
+        if (type instanceof IntArrayAstType) {
+            return 8;
+        }
+        if (type instanceof RefType) {
+            return 8;
+        }
+
+        throw new IllegalArgumentException("Unknown type");
+    }
+
     // region create llvm commands
 
     public String br(String register, String label1, String label2) {
@@ -54,6 +74,27 @@ public class LLVMUtil {
 
     public String alloca(String name, String type) {
         return String.format("%%%s = alloca %s", name, type);
+    }
+
+    public String calloc(String targetReg, int numOfObjects, int size){
+        return String.format("%%%s = call i8* @calloc i32 %d, i32 %d", targetReg, numOfObjects, size);
+    }
+
+    public String bitcast(String targetReg, String fromType, String reg2Cast, String toType){
+        return String.format("%%%s = bitcast %%%s %s to %s", targetReg, fromType, reg2Cast, toType);
+    }
+
+    public String getElementPtr(String targetReg, String eType, String ePtr, String eName, int startIdx, int endIdx){
+        return String.format("%%%s = getelementptr %s , %s @%s, i32 %d, i32 %d",
+                targetReg, eType, ePtr, eName, startIdx, endIdx);
+    }
+
+    public String store(String eType, String fromReg, String addressType, String toReg){
+        return String.format("store %s %%%s, %s %%%s", eType, fromReg, addressType, toReg);
+    }
+
+    public String load(String targetReg, String eType, String addressType, String fromReg){
+        return String.format("%%%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
     }
 
     public String op(ArithmeticOp arithmeticOp, String registerRes, String register1, String register2) {

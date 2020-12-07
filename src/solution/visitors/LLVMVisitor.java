@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import static solution.utils.LLVMUtil.ArithmeticOp.*;
-import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
 
@@ -53,7 +52,7 @@ public class LLVMVisitor implements Visitor {
 
         // declaration
         String declaration = String.format("define %s @%s.%s(i8* %%this",
-                getTypeName(methodDecl.returnType()),
+                llvmUtil.getTypeName(methodDecl.returnType()),
                 astNodeUtil.getClassDeclaration(methodDecl).name(),
                 methodDecl.name());
 
@@ -75,8 +74,8 @@ public class LLVMVisitor implements Visitor {
         }
 
         // return statement
-        methodDecl.ret().accept(this); // TODO check how to decide which register
-        String retType = getTypeName(methodDecl.returnType());
+        methodDecl.ret().accept(this);
+        String retType = llvmUtil.getTypeName(methodDecl.returnType());
         String retRegister = registerCounter.getLastRegister();
         methodBuilder.appendBodyLine(String.format("ret %s %s", retType, retRegister));
 
@@ -98,12 +97,12 @@ public class LLVMVisitor implements Visitor {
     public void visit(FormalArg formalArg) {
         //Example: i32 %.x
         String name = formalArg.name();
-        methodBuilder.appendDeclaration(getTypeName(formalArg.type()))
+        methodBuilder.appendDeclaration(llvmUtil.getTypeName(formalArg.type()))
                 .appendDeclaration(String.format(" %%.%s", name));
 
         //Example:  %x = alloca i32
         //          store i32 %.x, i32* %x
-        String type = getTypeName(formalArg.type());
+        String type = llvmUtil.getTypeName(formalArg.type());
         methodBuilder.appendBodyLine(llvmUtil.alloca(name, type));
         methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, name, type, name));
 
@@ -111,7 +110,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(VarDecl varDecl) {
-        methodBuilder.appendBodyLine(llvmUtil.alloca(varDecl.name(), getTypeName(varDecl.type())));
+        methodBuilder.appendBodyLine(llvmUtil.alloca(varDecl.name(), llvmUtil.getTypeName(varDecl.type())));
     }
 
     @Override
@@ -141,17 +140,54 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(WhileStatement whileStatement) {
-        // TODO OZ
+        String loop0 = "loop" + labelCounter.allocateLabelNumber();
+        String loop1 = "loop" + labelCounter.allocateLabelNumber();
+        String loop2 = "loop" + labelCounter.allocateLabelNumber();
+
+        // condition
+        methodBuilder.appendBodyLine(llvmUtil.br(loop0));
+        methodBuilder.appendLabel(loop0);
+        whileStatement.cond().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), loop1, loop2));
+
+        // body
+        methodBuilder.appendLabel(loop1);
+        whileStatement.body().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(loop0));
+
+        // exit
+        methodBuilder.appendLabel(loop2);
     }
 
     @Override
     public void visit(SysoutStatement sysoutStatement) {
-        // TODO OZ
+        String llvmLine;
+        Expr arg = sysoutStatement.arg();
+        if (arg instanceof IntegerLiteralExpr){
+            llvmLine = llvmUtil.print(((IntegerLiteralExpr) arg).num());
+        } else {
+            arg.accept(this);
+            llvmLine = llvmUtil.print(registerCounter.getLastRegister());
+        }
+        methodBuilder.appendBodyLine(llvmLine);
     }
 
     @Override
     public void visit(AssignStatement assignStatement) {
-        // TODO OZ
+        String res;
+        Expr rv = assignStatement.rv();
+        String lv = assignStatement.lv();
+
+        VarDecl var = (VarDecl) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, lv, assignStatement);
+        String type = llvmUtil.getTypeName(var.type());
+
+        if (llvmUtil.isSimpleType(rv)){
+            res = llvmUtil.store(type, llvmUtil.simpleTypeToInt(rv), lv);
+        } else {
+            rv.accept(this);
+            res = llvmUtil.store(type, registerCounter.getLastRegister(), lv);
+        }
+        methodBuilder.appendBodyLine(res);
     }
 
     @Override
@@ -210,19 +246,17 @@ public class LLVMVisitor implements Visitor {
 
         var e1 = e.e1();
         var e2 = e.e2();
-        var e1Type = e.e1().getClass();
-        var e2Type = e.e2().getClass();
 
         //case1: both are int-literals
-        if(e1 instanceof IntegerLiteralExpr && e2 instanceof IntegerLiteralExpr){
+        if (e1 instanceof IntegerLiteralExpr && e2 instanceof IntegerLiteralExpr) {
             twoIntLiteral(op, (IntegerLiteralExpr) e1, (IntegerLiteralExpr) e2);
         }
         //case2: neither is int-literal
-        if(e1Type != IntegerLiteralExpr.class && e2Type != IntegerLiteralExpr.class){
+        if (e1 instanceof IntegerLiteralExpr && !(e2 instanceof IntegerLiteralExpr)) {
             zeroIntLiteral(e, op);
         }
         //case3: e1 is int-literal
-        else if(e1Type == IntegerLiteralExpr.class){
+        else if (e1 instanceof IntegerLiteralExpr) {
             litOnRight = false;
             Expr tmp = e1;
             e1 = e2;
@@ -230,7 +264,7 @@ public class LLVMVisitor implements Visitor {
         }
 
         //case4: e2 is int-literal
-        oneIntLiteral(op, litOnRight, e2, (IntegerLiteralExpr) e1);
+        oneIntLiteral(op, litOnRight, e1, (IntegerLiteralExpr) e2);
     }
 
     @Override
@@ -283,10 +317,9 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IdentifierExpr e) {
-        var symbolTableScope = astNodeUtil.getEnclosingScope(e);
         var id = e.id();
-        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromCurUse(SymbolKeyType.VAR, id, e);
-        AstType type = declNode.type();
+        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, id, e);
+        String type = llvmUtil.getTypeName(declNode.type());
         methodBuilder.appendBodyLine(String.format("%s = load %s, %s* %%%s", registerCounter.allocateRegister(), type, type, id));
     }
 
@@ -309,9 +342,6 @@ public class LLVMVisitor implements Visitor {
     public void visit(NotExpr e) {
 
     }
-
-
-    // TODO move the implementation of llvmUtil.toLLVM() into the Type visitors
 
     @Override
     public void visit(IntAstType t) {

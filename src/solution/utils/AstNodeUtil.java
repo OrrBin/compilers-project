@@ -250,9 +250,9 @@ public class AstNodeUtil {
         return hierarchy;
     }
 
-    public AstNode getDeclFromCurUse(SymbolKeyType symbolKeyType, String id, AstNode curNode){
+    public AstNode getDeclFromName(SymbolKeyType symbolKeyType, String name, AstNode curNode){
 
-        var symbolKey = new SymbolKey(id, symbolKeyType);
+        var symbolKey = new SymbolKey(name, symbolKeyType);
         var symbolTableScope = getEnclosingScope(curNode);
         var entries = symbolTableScope.entries;
 

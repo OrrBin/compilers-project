@@ -364,22 +364,22 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
-
+        // TODO Or
     }
 
     @Override
     public void visit(NewIntArrayExpr e) {
-
+        // TODO Or
     }
 
     @Override
     public void visit(NewObjectExpr e) {
-
+        // TODO Or
     }
 
     @Override
     public void visit(NotExpr e) {
-
+        // TODO Or
     }
 
     @Override

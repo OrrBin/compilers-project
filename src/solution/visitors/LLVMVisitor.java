@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import static solution.utils.LLVMUtil.ArithmeticOp.*;
+import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
 
@@ -52,7 +53,7 @@ public class LLVMVisitor implements Visitor {
 
         // declaration
         String declaration = String.format("define %s @%s.%s(i8* %%this",
-                llvmUtil.getTypeName(methodDecl.returnType()),
+                getTypeName(methodDecl.returnType()),
                 astNodeUtil.getClassDeclaration(methodDecl).name(),
                 methodDecl.name());
 
@@ -75,9 +76,9 @@ public class LLVMVisitor implements Visitor {
 
         // return statement
         methodDecl.ret().accept(this);
-        String retType = llvmUtil.getTypeName(methodDecl.returnType());
+        String retType = getTypeName(methodDecl.returnType());
         String retRegister = registerCounter.getLastRegister();
-        methodBuilder.appendBodyLine(String.format("ret %s %s", retType, retRegister));
+        methodBuilder.appendBodyLine(llvmUtil.ret(retType, retRegister));
 
         methodBuilder.appendBody("}\n");
 
@@ -97,12 +98,12 @@ public class LLVMVisitor implements Visitor {
     public void visit(FormalArg formalArg) {
         //Example: i32 %.x
         String name = formalArg.name();
-        methodBuilder.appendDeclaration(llvmUtil.getTypeName(formalArg.type()))
+        methodBuilder.appendDeclaration(getTypeName(formalArg.type()))
                 .appendDeclaration(String.format(" %%.%s", name));
 
         //Example:  %x = alloca i32
         //          store i32 %.x, i32* %x
-        String type = llvmUtil.getTypeName(formalArg.type());
+        String type = getTypeName(formalArg.type());
         methodBuilder.appendBodyLine(llvmUtil.alloca(name, type));
         methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, name, type, name));
 
@@ -110,7 +111,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(VarDecl varDecl) {
-        methodBuilder.appendBodyLine(llvmUtil.alloca(varDecl.name(), llvmUtil.getTypeName(varDecl.type())));
+        methodBuilder.appendBodyLine(llvmUtil.alloca(varDecl.name(), getTypeName(varDecl.type())));
     }
 
     @Override
@@ -179,7 +180,7 @@ public class LLVMVisitor implements Visitor {
         String lv = assignStatement.lv();
 
         VarDecl var = (VarDecl) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, lv, assignStatement);
-        String type = llvmUtil.getTypeName(var.type());
+        String type = getTypeName(var.type());
 
         if (llvmUtil.isSimpleType(rv)){
             res = llvmUtil.store(type, llvmUtil.simpleTypeToInt(rv), lv);
@@ -192,12 +193,50 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
-        // TODO OZ
+
+        Expr rv = assignArrayStatement.rv();
+        Expr index = assignArrayStatement.index();
+        String arr_alloc2 = "arr_alloc" + labelCounter.allocateLabelNumber();
+        String arr_alloc3 = "arr_alloc" + labelCounter.allocateLabelNumber();
+        String arr_alloc4 = "arr_alloc" + labelCounter.allocateLabelNumber();
+        String arr_alloc5 = "arr_alloc" + labelCounter.allocateLabelNumber();
+
+        // Load the address of the x array
+        String arrRegister = registerCounter.allocateRegister();
+        methodBuilder.appendBodyLine(llvmUtil.load(arrRegister, "i32*", assignArrayStatement.lv()));
+        // Check that the index is greater than zero
+        // TODO consult with Ors if have to separate cases according to index type (is it stupid to calculate in register a IntegerLiteral?)
+        index.accept(this);
+        String indexRegister = registerCounter.getLastRegister();
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(), indexRegister, 0));
+        methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc2, arr_alloc3));
+        // Else throw out of bounds exception
+        methodBuilder.appendLabel(arr_alloc2);
+        methodBuilder.appendBodyLine(llvmUtil.throw_oob());
+        methodBuilder.appendBodyLine(llvmUtil.br(arr_alloc3));
+        // Load the size of the array (first integer of the array)
+        methodBuilder.appendLabel(arr_alloc3);
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), "i32", arrRegister, 0));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), "i32", registerCounter.getRegister(2)));
+        // Check that the index is less than the size of the array
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(), registerCounter.getRegister(2), indexRegister));
+        methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc4, arr_alloc5));
+        // Else throw out of bounds exception
+        methodBuilder.appendLabel(arr_alloc4);
+        methodBuilder.appendBodyLine(llvmUtil.throw_oob());
+        methodBuilder.appendBodyLine(llvmUtil.br(arr_alloc5));
+        // All ok, we can safely index the array now
+        methodBuilder.appendLabel(arr_alloc5);
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), indexRegister, 1)); // We'll be accessing our array at index + 1, since the first element holds the size
+        String ptrElement = registerCounter.allocateRegister();
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(ptrElement, "i32", arrRegister, registerCounter.getRegister(2)));
+        rv.accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.store("i32", registerCounter.getLastRegister(), ptrElement));
     }
 
     @Override
     public void visit(AndExpr e) {
-        // TODO OR
+        // TODO Oz
     }
 
     @Override
@@ -205,7 +244,7 @@ public class LLVMVisitor implements Visitor {
         mathOp2LLVM(e, SLT);
     }
 
- //region math-op expressions
+    //region math-op expressions
 
     private void zeroIntLiteral(BinaryExpr e, LLVMUtil.ArithmeticOp op) {
         e.e1().accept(this);
@@ -287,17 +326,17 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ArrayAccessExpr e) {
-
+        // TODO Oz
     }
 
     @Override
     public void visit(ArrayLengthExpr e) {
-
+        // TODO Oz
     }
 
     @Override
     public void visit(MethodCallExpr e) {
-
+        // TODO Oz
     }
 
     @Override
@@ -319,7 +358,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(IdentifierExpr e) {
         var id = e.id();
         var declNode = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, id, e);
-        String type = llvmUtil.getTypeName(declNode.type());
+        String type = getTypeName(declNode.type());
         methodBuilder.appendBodyLine(String.format("%s = load %s, %s* %%%s", registerCounter.allocateRegister(), type, type, id));
     }
 

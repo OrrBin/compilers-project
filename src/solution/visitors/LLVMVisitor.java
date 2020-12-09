@@ -121,15 +121,15 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
+        // condition
+        ifStatement.cond().accept(this);
+
+        // labels
         String if0 = "if" + labelCounter.allocateLabelNumber();
         String if1 = "if" + labelCounter.allocateLabelNumber();
         String if2 = "if" + labelCounter.allocateLabelNumber();
 
-        // condition
-        ifStatement.cond().accept(this);
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), if0, if1));
-
-        // labels
         methodBuilder.appendLabel(if0);
         ifStatement.thencase().accept(this);
         methodBuilder.appendBodyLine(llvmUtil.br(if2));
@@ -182,12 +182,9 @@ public class LLVMVisitor implements Visitor {
         VarDecl var = (VarDecl) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, lv, assignStatement);
         String type = getTypeName(var.type());
 
-        if (llvmUtil.isSimpleType(rv)){
-            res = llvmUtil.store(type, llvmUtil.simpleTypeToInt(rv), lv);
-        } else {
-            rv.accept(this);
-            res = llvmUtil.store(type, registerCounter.getLastRegister(), lv);
-        }
+        rv.accept(this);
+        res = llvmUtil.store(type, registerCounter.getLastRegister(), "%"+lv);
+
         methodBuilder.appendBodyLine(res);
     }
 
@@ -236,7 +233,23 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(AndExpr e) {
-        // TODO Oz
+        // labels
+        String andcond0 = "andcond" + labelCounter.allocateLabelNumber();
+        String andcond1 = "andcond" + labelCounter.allocateLabelNumber();
+        String andcond2 = "andcond" + labelCounter.allocateLabelNumber();
+        String andcond3 = "andcond" + labelCounter.allocateLabelNumber();
+
+        e.e1().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(andcond0));
+        methodBuilder.appendLabel(andcond0);
+        methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), andcond1, andcond3));
+        methodBuilder.appendLabel(andcond1);
+        e.e2().accept(this);
+        methodBuilder.appendBodyLine(llvmUtil.br(andcond2));
+        methodBuilder.appendLabel(andcond2);
+        methodBuilder.appendBodyLine(llvmUtil.br(andcond3));
+        methodBuilder.appendLabel(andcond3);
+        methodBuilder.appendBodyLine(llvmUtil.phi(registerCounter.allocateRegister(), "i1", 0, andcond0, registerCounter.getRegister(2), andcond2));
     }
 
     @Override
@@ -276,7 +289,7 @@ public class LLVMVisitor implements Visitor {
     private void twoIntLiteral(LLVMUtil.ArithmeticOp op, IntegerLiteralExpr e1, IntegerLiteralExpr e2) {
         String newReg = registerCounter.allocateRegister();
         int e1Number = e1.num();
-        int e2Number =e2.num();
+        int e2Number = e2.num();
         methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Number));
     }
 

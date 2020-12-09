@@ -148,7 +148,7 @@ public class LLVMUtil {
     }
 
     public String store(String type, int value, String register) {
-        return String.format("store %s, %d %s", type, value, register);
+        return String.format("store %s %d, %s* %s", type, value, type, register);
     }
 
     public String store(String type, String valueRegister, String register) {
@@ -166,6 +166,22 @@ public class LLVMUtil {
     public String ret(String retType, String retRegister) {
         return String.format("ret %s %s", retType, retRegister);
     }
+
+    public String phi(String allocateRegister, String type, String val1Reg, String cond1, String val2Reg, String cond2) {
+        return String.format("%s = phi %s [%s, %%%s], [%s, %%%s]", allocateRegister, type, val1Reg, cond1, val2Reg, cond2);
+    }
+
+    public String phi(String allocateRegister, String type, int val1, String cond1, String val2Reg, String cond2) {
+        return String.format("%s = phi %s [%d, %%%s], [%s, %%%s]", allocateRegister, type, val1, cond1, val2Reg, cond2);
+    }
+
+    public String phi(String allocateRegister, String type, String val1Reg, String cond1, int val2, String cond2) {
+        return String.format("%s = phi %s [%s, %%%s], [%d, %%%s]", allocateRegister, type, val1Reg, cond1, val2, cond2);
+    }
+
+    public String phi(String allocateRegister, String type, int val1, String cond1, int val2, String cond2) {
+        return String.format("%s = phi %s [%d, %%%s], [%d, %%%s]", allocateRegister, type, val1, cond1, val2, cond2);
+    }
     // endregion
 
     public enum ArithmeticOp {
@@ -173,7 +189,7 @@ public class LLVMUtil {
 
         public final String op;
 
-        private ArithmeticOp(String op) {
+        ArithmeticOp(String op) {
             this.op = op;
         }
 

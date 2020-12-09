@@ -130,35 +130,19 @@ public class LLVMUtil {
         return String.format("%s = load %s, %s* %s", registerRes, type, type, register);
     }
 
-    public String op(ArithmeticOp arithmeticOp, String registerRes, String register1, String register2) {
-        return String.format("%s = %s i32 %s, %s", registerRes, arithmeticOp, register1, register2);
-    }
-
-    public String op(ArithmeticOp arithmeticOp, String registerRes, String register, int num) {
-        return String.format("%s = %s i32 %s, %d", registerRes, arithmeticOp, register, num);
-    }
-
-    public String op(ArithmeticOp arithmeticOp, String registerRes, int num, String register) {
-        return String.format("%s = %s i32 %d, %s", registerRes, arithmeticOp, num, register);
-    }
-
-    public String op(ArithmeticOp arithmeticOp, String registerRes, int num1, int num2) {
-        return String.format("%s = %s i32 %d, %d", registerRes, arithmeticOp, num1, num2);
-    }
-
-    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, String register1, String register2) {
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String type, String register1, String register2) {
         return String.format("%s = %s %s %s, %s", registerRes, arithmeticOp, type, register1, register2);
     }
 
-    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, String register, int num) {
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String type, String register, int num) {
         return String.format("%s = %s %s %s, %d", registerRes, arithmeticOp, type, register, num);
     }
 
-    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, int num, String register) {
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String type, int num, String register) {
         return String.format("%s = %s %s %d, %s", registerRes, arithmeticOp, type, num, register);
     }
 
-    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, int num1, int num2) {
+    public String op(ArithmeticOp arithmeticOp, String registerRes, String type, int num1, int num2) {
         return String.format("%s = %s %s %d, %d", registerRes, arithmeticOp, type, num1, num2);
     }
 

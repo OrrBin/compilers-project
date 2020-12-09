@@ -19,7 +19,16 @@ import static solution.utils.LLVMUtil.getTypeName;
 
 public class LLVMVisitor implements Visitor {
 
+
+    public static final String I_8 = "i8";
+    public static final String I_8_P = "i8*";
+
+    public static final String I_32_P = "i32*";
     public static final String I_32 = "i32";
+
+    public static final String I_1 = "i1";
+    public static final String I_1_P = "i1*";
+
     private OutputStream outputStream;
     private LLVMUtil llvmUtil;
     private AstNodeUtil astNodeUtil;
@@ -56,7 +65,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(MethodDecl methodDecl) {
 
         // declaration
-        String declaration = String.format("define %s @%s.%s(i8* %%this",
+        String declaration = String.format("define %s @%s.%s(" + I_8_P + " %%this",
                 getTypeName(methodDecl.returnType()),
                 astNodeUtil.getClassDeclaration(methodDecl).name(),
                 methodDecl.name());
@@ -109,7 +118,7 @@ public class LLVMVisitor implements Visitor {
         //          store i32 %.x, i32* %x
         String type = getTypeName(formalArg.type());
         methodBuilder.appendBodyLine(llvmUtil.alloca(name, type));
-        methodBuilder.appendBodyLine(String.format("store %s %%.%s, %s* %s", type, name, type, name));
+        methodBuilder.appendBodyLine(llvmUtil.store(type, name, type, name));
 
     }
 
@@ -200,7 +209,7 @@ public class LLVMVisitor implements Visitor {
 
         // Load the address of the x array
         String arrRegister = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.load(arrRegister, "i32*", assignArrayStatement.lv()));
+        methodBuilder.appendBodyLine(llvmUtil.load(arrRegister, I_32_P, assignArrayStatement.lv()));
 
         // continue the accessing procedure
         accessArray2LLVM(index);
@@ -220,7 +229,7 @@ public class LLVMVisitor implements Visitor {
         // Check that the index is greater than zero
         index.accept(this);
         String indexRegister = registerCounter.getLastRegister();
-        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(), indexRegister, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(),I_32, indexRegister, 0));
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc2, arr_alloc3));
         // Else throw out of bounds exception
         methodBuilder.appendLabel(arr_alloc2);
@@ -228,10 +237,10 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.br(arr_alloc3));
         // Load the size of the array (first integer of the array)
         methodBuilder.appendLabel(arr_alloc3);
-        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), "i32", arrRegister, 0));
-        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), "i32", registerCounter.getRegister(2)));
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), I_32, arrRegister, 0));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32, registerCounter.getRegister(2)));
         // Check that the index is less than the size of the array
-        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(), registerCounter.getRegister(2), indexRegister));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(),I_32, registerCounter.getRegister(2), indexRegister));
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc4, arr_alloc5));
         // Else throw out of bounds exception
         methodBuilder.appendLabel(arr_alloc4);
@@ -239,9 +248,9 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.br(arr_alloc5));
         // All ok, we can safely index the array now
         methodBuilder.appendLabel(arr_alloc5);
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), indexRegister, 1)); // We'll be accessing our array at index + 1, since the first element holds the size
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, indexRegister, 1)); // We'll be accessing our array at index + 1, since the first element holds the size
         String ptrElement = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(ptrElement, "i32", arrRegister, registerCounter.getRegister(2)));
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(ptrElement, I_32, arrRegister, registerCounter.getRegister(2)));
     }
 
     @Override
@@ -262,7 +271,7 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendLabel(andcond2);
         methodBuilder.appendBodyLine(llvmUtil.br(andcond3));
         methodBuilder.appendLabel(andcond3);
-        methodBuilder.appendBodyLine(llvmUtil.phi(registerCounter.allocateRegister(), "i1", 0, andcond0, registerCounter.getRegister(2), andcond2));
+        methodBuilder.appendBodyLine(llvmUtil.phi(registerCounter.allocateRegister(), I_1, 0, andcond0, registerCounter.getRegister(2), andcond2));
     }
 
     @Override
@@ -279,7 +288,7 @@ public class LLVMVisitor implements Visitor {
         String e2Reg = registerCounter.getLastRegister();
         String newReg = registerCounter.allocateRegister();
 
-        methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Reg, e2Reg));
+        methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, I_32, e1Reg, e2Reg));
     }
 
     private void oneIntLiteral(LLVMUtil.ArithmeticOp op, boolean litOnRight, Expr e2, IntegerLiteralExpr e1) {
@@ -293,9 +302,9 @@ public class LLVMVisitor implements Visitor {
 
         //i.e. e1 is the right side of the expression
         if (litOnRight) {
-            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e2Reg, e1Number));
+            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, I_32, e2Reg, e1Number));
         } else {
-            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Reg));
+            methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, I_32, e1Number, e2Reg));
         }
     }
 
@@ -303,7 +312,7 @@ public class LLVMVisitor implements Visitor {
         String newReg = registerCounter.allocateRegister();
         int e1Number = e1.num();
         int e2Number = e2.num();
-        methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Number));
+        methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, I_32, e1Number, e2Number));
     }
 
     private void mathOp2LLVM(BinaryExpr e, LLVMUtil.ArithmeticOp op) {
@@ -364,11 +373,11 @@ public class LLVMVisitor implements Visitor {
         //array length is stored at array[0]
         //getting pointer to array[0]
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
-                "i32*", "i32**", registerCounter.getLastRegister(), 0));
+                I_32_P, "i32**", registerCounter.getLastRegister(), 0));
 
         //accessing array[0] using the pointer
-        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), "i32",
-                "i32*", registerCounter.getLastRegister()));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32,
+                I_32_P, registerCounter.getLastRegister()));
     }
 
     @Override
@@ -389,9 +398,9 @@ public class LLVMVisitor implements Visitor {
 
         // bitcast & load to access the vtable ptr
         methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
-                "i8*", ownerReg, "i8***"));
+                I_8_P, ownerReg, I_8_P + "**"));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(),
-                "i8**", "i8***", registerCounter.getLastRegister()));
+                I_8_P + "*", I_8_P + "**", registerCounter.getLastRegister()));
 
         // Get a pointer to the 0-th entry in the vtable.
         // The index here is exactly the offset corresponding to Base::set.
@@ -400,19 +409,19 @@ public class LLVMVisitor implements Visitor {
         // find method index in vtable & get a ptr to its entry
         int methodIdxInVtable = astNodeUtil.getMethodIdxInVtable(e);
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
-                "i8*", "i8**", registerCounter.getLastRegister(), methodIdxInVtable));
+                I_8_P, I_8_P + "*", registerCounter.getLastRegister(), methodIdxInVtable));
 
         // Read into the array to get the actual function pointer
         // e.g. %_10 = load i8*, i8** %_9
-        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), "i8*",
-                "i8**", registerCounter.getLastRegister()));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P,
+                I_8_P + "*", registerCounter.getLastRegister()));
 
         // Cast the function pointer from i8* to a function ptr type that matches the function's signature,
         // so that we can call it.
         // e.g. %_11 = bitcast i8* %_10 to i32 (i8*, i32)*
         String methodTypesPtr = getMethodTypesLLVM(e);
         methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
-                "i8*", registerCounter.getLastRegister(), methodTypesPtr));
+                I_8_P, registerCounter.getLastRegister(), methodTypesPtr));
 
         // Perform the call on the function pointer. Note that the first argument is the receiver object ("this").
         // e.g.  %_12 = call i32 %_11(i8* %_6, i32 1)
@@ -436,7 +445,7 @@ public class LLVMVisitor implements Visitor {
         //remove last comma
         methodArgsTypes.deleteCharAt(methodArgsTypes.length()-1);
 
-        return String.format("%s (i8*, %s)*", retType, methodArgsTypes);
+        return String.format("%s (" + I_8_P + ", %s)*", retType, methodArgsTypes);
     }
 
     private String callMethodLLVM(MethodCallExpr e, String methodPtrReg){
@@ -452,24 +461,24 @@ public class LLVMVisitor implements Visitor {
         //remove last comma
         methodArgsTypes.deleteCharAt(methodArgsTypes.length()-1);
 
-        return String.format("%s (i8* %s, %s)", retType, methodPtrReg, methodArgsTypes);
+        return String.format("%s (" + I_8_P + " %s, %s)", retType, methodPtrReg, methodArgsTypes);
     }
 
     //endregion
 
     @Override
     public void visit(IntegerLiteralExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), e.num(), 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, e.num(), 0));
     }
 
     @Override
     public void visit(TrueExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), 1, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, 1, 0));
     }
 
     @Override
     public void visit(FalseExpr e) {
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), 0, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, 0, 0));
     }
 
     @Override
@@ -482,8 +491,8 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
-    methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), "i8*",
-            "i8**", "%this"));
+    methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P,
+            I_8_P + "*", "%this"));
     }
 
     @Override
@@ -500,7 +509,7 @@ public class LLVMVisitor implements Visitor {
         String arrAlloc1 = "arr_alloc" + labelCounter.allocateLabelNumber();
 
         String cmpResReg = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.op(SLT, cmpResReg, arrSizeReg, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, cmpResReg, I_32, arrSizeReg, 0));
         methodBuilder.appendBodyLine(llvmUtil.br(cmpResReg, arrAlloc0, arrAlloc1));
 
         //arr_alloc0:
@@ -513,7 +522,7 @@ public class LLVMVisitor implements Visitor {
         // Calculate size bytes to be allocated for the array (new arr[sz] -> add i32 1, sz)
         // We need an additional int worth of space, to store the size of the array.
         String arrSizeWithSpace4SizeReg = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, arrSizeWithSpace4SizeReg, arrSizeReg, 1));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, arrSizeWithSpace4SizeReg, I_32, arrSizeReg, 1));
 
         //Allocate sz + 1 integers (4 bytes each)
         String arrHeapLocReg = registerCounter.allocateRegister();
@@ -522,10 +531,10 @@ public class LLVMVisitor implements Visitor {
 
         //Cast the returned pointer
         String castedPtrReg = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.bitcast(castedPtrReg, "i8*", arrHeapLocReg, "i32*"));
+        methodBuilder.appendBodyLine(llvmUtil.bitcast(castedPtrReg, I_8_P, arrHeapLocReg, I_32_P));
 
         //Store the size of the array in the first position of the array
-        methodBuilder.appendBodyLine(llvmUtil.store("i32", arrSizeReg, "i32*", castedPtrReg));
+        methodBuilder.appendBodyLine(llvmUtil.store(I_32, arrSizeReg, I_32_P, castedPtrReg));
 
     }
 
@@ -547,13 +556,13 @@ public class LLVMVisitor implements Visitor {
         // Set the vtable pointer to point to the correct vtable
         // e.g.  %_1 = bitcast i8* %_0 to i8***
         String vTablePtrReg = registerCounter.allocateRegister();
-        methodBuilder.appendBodyLine(llvmUtil.bitcast(vTablePtrReg, "i8*", heapLocReg, "i8***"));
+        methodBuilder.appendBodyLine(llvmUtil.bitcast(vTablePtrReg, I_8_P, heapLocReg, I_8_P + "**"));
 
         //Get the address of the first element of the Base_vtable
         //e.g. %_2 = getelementptr [2 x i8*], [2 x i8*]* @.Base_vtable, i32 0, i32 0
         String firstEVTable = registerCounter.allocateRegister();
         int numOfMethods = astNodeUtil.getNumOfMethods(classDecl);
-        String vTableElements = String.format("[%s x i8*]",numOfMethods);
+        String vTableElements = String.format("[%s x " + I_8_P + "]",numOfMethods);
         String vTableElementsPtr = vTableElements +"*";
         String classNameVtable = classDecl.name() + "_vtable";
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(firstEVTable,vTableElements,
@@ -561,9 +570,9 @@ public class LLVMVisitor implements Visitor {
 
         // Set the vtable to the correct address.
         // e.g. store i8** %_2, i8*** %_1
-        methodBuilder.appendBodyLine(llvmUtil.store("i8**", firstEVTable, "i8***", vTablePtrReg));
+        methodBuilder.appendBodyLine(llvmUtil.store(I_8_P + "*", firstEVTable, I_8_P + "**", vTablePtrReg));
 
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), heapLocReg, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, heapLocReg, 0));
 
     }
 
@@ -612,7 +621,7 @@ public class LLVMVisitor implements Visitor {
     @Override
     public void visit(NotExpr e) {
         e.e().accept(this);
-        methodBuilder.appendBodyLine(llvmUtil.opType(SUB, registerCounter.allocateRegister(), "i1",
+        methodBuilder.appendBodyLine(llvmUtil.op(SUB, registerCounter.allocateRegister(), I_1,
                 1, registerCounter.getLastRegister()));
     }
 

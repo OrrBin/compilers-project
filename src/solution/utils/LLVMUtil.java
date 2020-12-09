@@ -193,7 +193,7 @@ public class LLVMUtil {
     public String callMethod(String targetReg, String methodSignature){
         return String.format("%s = call %s", targetReg, methodSignature);
     }
-    
+
     public String phi(String allocateRegister, String type, String val1Reg, String cond1, String val2Reg, String cond2) {
         return String.format("%s = phi %s [%s, %%%s], [%s, %%%s]", allocateRegister, type, val1Reg, cond1, val2Reg, cond2);
     }

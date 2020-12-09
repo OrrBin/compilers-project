@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import static solution.symbol_table.symbol_types.SymbolKeyType.METHOD;
 import static solution.utils.LLVMUtil.ArithmeticOp.*;
 import static solution.utils.LLVMUtil.getTypeName;
 
@@ -68,9 +69,12 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(MainClass mainClass) {
-        methodBuilder.appendBody("define i32 @main() {");
+        methodBuilder.appendBody("define i32 @main() {\n");
         mainClass.mainStatement().accept(this);
-        methodBuilder.appendBody("}");
+        methodBuilder.appendBodyLine(llvmUtil.ret(I_32, 0));
+        methodBuilder.appendBody("}\n\n");
+
+        writeAndClean();
     }
 
     @Override
@@ -105,18 +109,22 @@ public class LLVMVisitor implements Visitor {
         String retRegister = registerCounter.getLastRegister();
         methodBuilder.appendBodyLine(llvmUtil.ret(retType, retRegister));
 
-        methodBuilder.appendBody("}\n");
+        methodBuilder.appendBody("}\n\n");
 
+        // clean up
+        writeAndClean();
+    }
+
+    private void writeAndClean() {
         try {
             outputStream.write(methodBuilder.toString().getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // clean up
         methodBuilder.clear();
         registerCounter.resetRegisterCounter();
-        labelCounter.resetLabelCounter();;
+        labelCounter.resetLabelCounter();
     }
 
     @Override
@@ -412,7 +420,7 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
                 I_8_P, ownerReg, I_8_P + "**"));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(),
-                I_8_P + "*", I_8_P + "**", registerCounter.getLastRegister()));
+                I_8_P + "*", I_8_P + "**", registerCounter.getRegister(2)));
 
         // Get a pointer to the 0-th entry in the vtable.
         // The index here is exactly the offset corresponding to Base::set.
@@ -421,23 +429,24 @@ public class LLVMVisitor implements Visitor {
         // find method index in vtable & get a ptr to its entry
         int methodIdxInVtable = astNodeUtil.getMethodIdxInVtable(e);
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
-                I_8_P, I_8_P + "*", registerCounter.getLastRegister(), methodIdxInVtable));
+                I_8_P, I_8_P + "*", registerCounter.getRegister(2), methodIdxInVtable));
 
         // Read into the array to get the actual function pointer
         // e.g. %_10 = load i8*, i8** %_9
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P,
-                I_8_P + "*", registerCounter.getLastRegister()));
+                I_8_P + "*", registerCounter.getRegister(2)));
 
         // Cast the function pointer from i8* to a function ptr type that matches the function's signature,
         // so that we can call it.
         // e.g. %_11 = bitcast i8* %_10 to i32 (i8*, i32)*
         String methodTypesPtr = getMethodTypesLLVM(e);
-        methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
-                I_8_P, registerCounter.getLastRegister(), methodTypesPtr));
+        String methodReg = registerCounter.allocateRegister();
+        methodBuilder.appendBodyLine(llvmUtil.bitcast(methodReg,
+                I_8_P, registerCounter.getRegister(2), methodTypesPtr));
 
         // Perform the call on the function pointer. Note that the first argument is the receiver object ("this").
         // e.g.  %_12 = call i32 %_11(i8* %_6, i32 1)
-        var methodSignature = callMethodLLVM(e, registerCounter.getLastRegister());
+        var methodSignature = callMethodLLVM(e, ownerReg, methodReg);
         methodBuilder.appendBodyLine(llvmUtil.callMethod(registerCounter.allocateRegister(), methodSignature));
 
     }
@@ -445,35 +454,37 @@ public class LLVMVisitor implements Visitor {
     //region method call helper functions
 
     private String getMethodTypesLLVM(MethodCallExpr e) {
-
-        var methodDecl = astNodeUtil.getMethod(e);
-        var retType = getTypeName(methodDecl.returnType());
-        StringBuilder methodArgsTypes = new StringBuilder();
-        var formals = methodDecl.formals();
-        for(var arg : formals) {
-            methodArgsTypes.append(getTypeName(arg.type())).append(", ");
-
-        }
-        //remove last comma
-        methodArgsTypes.deleteCharAt(methodArgsTypes.length()-1);
-
-        return String.format("%s (" + I_8_P + ", %s)*", retType, methodArgsTypes);
+        return callMethodLLVM(e, null, null);
     }
 
-    private String callMethodLLVM(MethodCallExpr e, String methodPtrReg){
+    private String callMethodLLVM(MethodCallExpr e, String thisRegister, String methodPtrReg){
 
-        var methodDecl = astNodeUtil.getMethod(e);
+        var methodDecl = (MethodDecl) astNodeUtil.getDeclFromName(METHOD, e.methodId(), e);
         var retType = getTypeName(methodDecl.returnType());
         StringBuilder methodArgsTypes = new StringBuilder();
         var formals = methodDecl.formals();
-        for(var arg : formals) {
-            methodArgsTypes.append(getTypeName(arg.type())).append(" ").append(arg.name()).append(", ");
-
+        var actuals = e.actuals();
+        int size = actuals.size();
+        for (int i = 0; i < size; i++) {
+            FormalArg arg = formals.get(i);
+            methodArgsTypes.append(getTypeName(arg.type()));
+            if (methodPtrReg != null) {
+                Expr expr = actuals.get(i);
+                expr.accept(this);
+                methodArgsTypes.append(" ").append(registerCounter.getLastRegister());
+            }
+            methodArgsTypes.append(", ");
         }
         //remove last comma
-        methodArgsTypes.deleteCharAt(methodArgsTypes.length()-1);
+        if (methodArgsTypes.length() > 0) {
+            methodArgsTypes.deleteCharAt(methodArgsTypes.length() - 1);
+            methodArgsTypes.deleteCharAt(methodArgsTypes.length() - 1);
+        }
 
-        return String.format("%s (" + I_8_P + " %s, %s)", retType, methodPtrReg, methodArgsTypes);
+        String methodTypes = methodArgsTypes.length() > 0 ? ", " + methodArgsTypes : "";
+        return methodPtrReg != null ?
+                String.format("%s %s(" + I_8_P + " %s%s)", retType, methodPtrReg, thisRegister, methodTypes)
+                : String.format("%s (" + I_8_P + "%s)*", retType, methodTypes);
     }
 
     //endregion
@@ -584,8 +595,12 @@ public class LLVMVisitor implements Visitor {
         // e.g. store i8** %_2, i8*** %_1
         methodBuilder.appendBodyLine(llvmUtil.store(I_8_P + "*", firstEVTable, I_8_P + "**", vTablePtrReg));
 
-        methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), I_32, heapLocReg, 0));
-
+        // enforce last register to point the allocated object
+        String tmp = "tmp";
+        String tmpRegister = "%" + tmp;
+        methodBuilder.appendBodyLine(llvmUtil.alloca(tmp, I_8_P));
+        methodBuilder.appendBodyLine(llvmUtil.store(I_8_P, heapLocReg, tmpRegister));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P, tmpRegister));
     }
 
     //region new object space allocation

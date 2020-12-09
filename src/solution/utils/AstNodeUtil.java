@@ -119,7 +119,7 @@ public class AstNodeUtil {
         //now curClass is the first super class
         //descending the path and collecting methods
 
-        int methodCnt = 0;
+        int methodCnt = -1;
         while(!ancestorClassPath.empty()){
             curClass = ancestorClassPath.pop();
             var methods = curClass.methoddecls();
@@ -299,10 +299,10 @@ public class AstNodeUtil {
         return hierarchy;
     }
 
-    public AstNode getDeclFromName(SymbolKeyType symbolKeyType, String name, AstNode curNode){
+    public AstNode getDeclFromName(SymbolKeyType symbolKeyType, String name, AstNode startingAstNode){
 
         var symbolKey = new SymbolKey(name, symbolKeyType);
-        var symbolTableScope = getEnclosingScope(curNode);
+        var symbolTableScope = getEnclosingScope(startingAstNode);
         var entries = symbolTableScope.entries;
 
         while (!entries.containsKey(symbolKey)){

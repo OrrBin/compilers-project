@@ -12,12 +12,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-//TODO: Oz
 public class RenameMethodVisitor implements Visitor {
 
     private RenameOpParams op;
     private List<RenameOp<?>> renameOps;
-    //private ClassDecl methodClassScope;
     private AstNodeUtil util;
     private Set<ClassDecl> family;
 

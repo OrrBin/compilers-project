@@ -147,7 +147,7 @@ public class LLVMUtil {
     }
 
     public String print(String register) {
-        return String.format("call void (i32) @print_int(%s)", register);
+        return String.format("call void (i32) @print_int(i32 %s)", register);
     }
 
     public String print(int num) {
@@ -172,6 +172,10 @@ public class LLVMUtil {
 
     public String ret(String retType, String retRegister) {
         return String.format("ret %s %s", retType, retRegister);
+    }
+
+    public String ret(String retType, int value) {
+        return String.format("ret %s %d", retType, value);
     }
 
     public String callMethod(String targetReg, String methodSignature){

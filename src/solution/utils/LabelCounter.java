@@ -9,7 +9,7 @@ public class LabelCounter {
         return labelCounter-1;
     }
 
-    public void resetRegisterCounter() {
+    public void resetLabelCounter() {
         labelCounter = 0;
     }
 

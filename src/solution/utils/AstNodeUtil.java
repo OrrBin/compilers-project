@@ -5,11 +5,12 @@ import solution.SymbolTablesManager;
 import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
+import solution.symbol_table.symbol_table_types.SymbolTable4Prog;
 import solution.symbol_table.symbol_types.SymbolKey;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.image.BandedSampleModel;
+import java.util.*;
 
 public class AstNodeUtil {
 
@@ -99,6 +100,55 @@ public class AstNodeUtil {
         return extendingClasses;
     }
 
+    private Map<Integer, String> getMethodsByHeirOrder(ClassDecl classDecl) {
+        Map<Integer, String> methodOrder2Names = new HashMap<>();
+        Stack<ClassDecl> ancestorClassPath = new Stack<>();
+        ancestorClassPath.push(classDecl);
+
+        ClassDecl curClass;
+        var parentClass = getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
+
+        //climb up the ancestor tree till reaching root
+        while(parentClass != null){
+            if(parentClass instanceof Program) {break;}
+
+            curClass = (ClassDecl)parentClass;
+            ancestorClassPath.push(curClass);
+            parentClass = getEnclosingScope(curClass).parentSymbolTable.symbolTableScope;
+        }
+        //now curClass is the first super class
+        //descending the path and collecting methods
+
+        int methodCnt = 0;
+        while(!ancestorClassPath.empty()){
+            curClass = ancestorClassPath.pop();
+            var methods = curClass.methoddecls();
+            for(var method : methods ){
+                if(methodOrder2Names.containsValue(method.name())) {continue;}
+                methodCnt ++;
+                methodOrder2Names.put(methodCnt, method.name());
+            }
+        }
+        return methodOrder2Names;
+    }
+
+    public int getMethodIdxInVtable(MethodCallExpr methodCall) {
+        var classDecl = getClassDeclaration(methodCall);
+        var methodsByHeirOrder = getMethodsByHeirOrder(classDecl);
+        var methodsKeySet = methodsByHeirOrder.keySet();
+        for (var methodIdx : methodsKeySet) {
+            if (methodsByHeirOrder.get(methodIdx).equals(methodCall.methodId())) {
+                return methodIdx;
+            }
+        }
+        return 0;
+    }
+
+    public int getNumOfMethods(ClassDecl classDecl) {
+        Map<Integer, String> methodNames = getMethodsByHeirOrder(classDecl);
+        return methodNames.size();
+    }
+
     // endregion
 
     // region Variables
@@ -168,8 +218,7 @@ public class AstNodeUtil {
     public boolean isField(VariableIntroduction var) {
         return !isLocal(var) && !isParameter(var);
     }
-
-
+    
     public boolean isField(IdentifierExpr var) {
         return !isLocal(var) && !isParameter(var);
     }
@@ -264,5 +313,29 @@ public class AstNodeUtil {
         //found declaration scope
         return entries.get(symbolKey).node;
     }
+
+    //temporary. TODO: refactor
+    public ClassDecl getClassDeclFromId(Expr e, String classId) {
+        var curSymbolTable = getEnclosingScope(e);
+        var parentSymbolTable = curSymbolTable.parentSymbolTable;
+        ClassDecl classDecl = null;
+
+        while(parentSymbolTable != null){
+            curSymbolTable = parentSymbolTable;
+            parentSymbolTable = curSymbolTable.parentSymbolTable;
+        }
+        //program's symbolTable
+        var progSymbolTable = (SymbolTable4Prog)curSymbolTable;
+        var entries = progSymbolTable.entries;
+        var keySet = entries.keySet();
+
+        //go over all symbols (classes) to locate classId
+        for(SymbolKey symbolKey : keySet){
+            if(!symbolKey.name.equals(classId)){ continue;}
+            classDecl = (ClassDecl) entries.get(symbolKey).node;
+        }
+        return classDecl;
+    }
+
 }
 

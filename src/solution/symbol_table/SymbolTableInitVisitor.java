@@ -8,10 +8,7 @@ import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_table_types.SymbolTable4Class;
 import solution.symbol_table.symbol_table_types.SymbolTable4Method;
 import solution.symbol_table.symbol_table_types.SymbolTable4Prog;
-import solution.symbol_table.symbol_types.ClassSymbol;
-import solution.symbol_table.symbol_types.MethodSymbol;
-import solution.symbol_table.symbol_types.Symbol;
-import solution.symbol_table.symbol_types.VarSymbol;
+import solution.symbol_table.symbol_types.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +79,7 @@ public class SymbolTableInitVisitor implements Visitor {
 
         //Adding main class to rootTable
         MainClass mainClass = program.mainClass();
-        Symbol mainClassSymbol = new Symbol(mainClass);
+        Symbol mainClassSymbol = new MainClassSymbol(mainClass);
         rootTable.addSymbol2Table(mainClassSymbol);
         mainClass.accept(this);
     }

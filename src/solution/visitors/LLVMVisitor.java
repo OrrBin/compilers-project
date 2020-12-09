@@ -289,7 +289,7 @@ public class LLVMVisitor implements Visitor {
     private void twoIntLiteral(LLVMUtil.ArithmeticOp op, IntegerLiteralExpr e1, IntegerLiteralExpr e2) {
         String newReg = registerCounter.allocateRegister();
         int e1Number = e1.num();
-        int e2Number =e2.num();
+        int e2Number = e2.num();
         methodBuilder.appendBodyLine(llvmUtil.op(op, newReg, e1Number, e2Number));
     }
 
@@ -553,6 +553,48 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.op(ADD, registerCounter.allocateRegister(), heapLocReg, 0));
 
     }
+
+    //region new object space allocation
+
+    private int calculateObjectSize(ClassDecl classDecl) {
+        int vTableAddress = 8, space4Fields = 0, typeSize;
+        //find ClassDecl node that matches classId
+        space4Fields = getSizeOfFields(classDecl);
+
+        return vTableAddress + space4Fields;
+    }
+    private int getSizeOfFields(ClassDecl classDecl){
+        int sizeOfFields = 0;
+        Map<String, AstType> fieldsNameType = new HashMap<>();
+        Stack<ClassDecl> ancestorClassPath = new Stack<>();
+        ancestorClassPath.push(classDecl);
+
+        ClassDecl curClass;
+        var parentClass = astNodeUtil.getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
+
+        //climb up the ancestor tree till reaching root
+        while(parentClass != null){
+            if(parentClass instanceof Program) {break;}
+
+            curClass = (ClassDecl)parentClass;
+            ancestorClassPath.push(curClass);
+            parentClass = astNodeUtil.getEnclosingScope(curClass).parentSymbolTable.symbolTableScope;
+        }
+        //now curClass is the first super class
+        //descending the path and collecting methods
+
+        while(!ancestorClassPath.empty()){
+            curClass = ancestorClassPath.pop();
+            curClass.fields().forEach(field->fieldsNameType.put(field.name(), field.type()));
+        }
+
+        var keySet = fieldsNameType.keySet();
+        for(var field : keySet){
+            sizeOfFields += llvmUtil.getTypeSize(fieldsNameType.get(field));
+        }
+        return sizeOfFields;
+    }
+    //endregion
 
     @Override
     public void visit(NotExpr e) {

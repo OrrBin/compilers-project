@@ -92,7 +92,11 @@ public class LLVMUtil {
     }
 
     public String calloc(String targetReg, int numOfObjects, int size){
-        return String.format("%s = call i8* @calloc i32 %d, i32 %d", targetReg, numOfObjects, size);
+        return String.format("%s = call i8* @calloc(i32 %d, i32 %d)", targetReg, numOfObjects, size);
+    }
+
+    public String calloc(String targetReg, String numOfObjectsReg, int size){
+        return String.format("%s = call i8* @calloc(i32 %s, i32 %d)", targetReg, numOfObjectsReg, size);
     }
 
     public String bitcast(String targetReg, String fromType, String reg2Cast, String toType){
@@ -109,18 +113,21 @@ public class LLVMUtil {
                 targetReg, type, type, registerBase, type, offset);
     }
 
-
-    public String getElementPtr(String targetReg, String type, String registerBase, String registeroffset){
+    public String getElementPtr(String targetReg, String type, String registerBase, String offsetReg){
         return String.format("%s = getelementptr %s, %s* %s, %s %s",
-                targetReg, type, type, registerBase, type, registeroffset);
+                targetReg, type, type, registerBase, type, offsetReg);
     }
 
-    public String store(String eType, String fromReg, String addressType, String toReg){
-        return String.format("store %s %%%s, %s %%%s", eType, fromReg, addressType, toReg);
+    public String getElementPtr(String targetReg, String eType, String ptrType, String addressReg, int idxEntry) {
+        return String.format( "%s = getelementptr %s, %s %s, i32 %d", targetReg, eType, ptrType, addressReg, idxEntry);
     }
 
     public String load(String targetReg, String eType, String addressType, String fromReg){
         return String.format("%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
+    }
+
+    public String load(String registerRes, String type, String register) {
+        return String.format("%s = load %s, %s* %s", registerRes, type, type, register);
     }
 
     public String op(ArithmeticOp arithmeticOp, String registerRes, String register1, String register2) {
@@ -139,6 +146,22 @@ public class LLVMUtil {
         return String.format("%s = %s i32 %d, %d", registerRes, arithmeticOp, num1, num2);
     }
 
+    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, String register1, String register2) {
+        return String.format("%s = %s %s %s, %s", registerRes, arithmeticOp, type, register1, register2);
+    }
+
+    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, String register, int num) {
+        return String.format("%s = %s %s %s, %d", registerRes, arithmeticOp, type, register, num);
+    }
+
+    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, int num, String register) {
+        return String.format("%s = %s %s %d, %s", registerRes, arithmeticOp, type, num, register);
+    }
+
+    public String opType(ArithmeticOp arithmeticOp, String registerRes, String type, int num1, int num2) {
+        return String.format("%s = %s %s %d, %d", registerRes, arithmeticOp, type, num1, num2);
+    }
+
     public String print(String register) {
         return String.format("call void (i32) @print_int(%s)", register);
     }
@@ -155,8 +178,8 @@ public class LLVMUtil {
         return String.format("store %s %s, %s* %s", type, valueRegister, type, register);
     }
 
-    public String load(String registerRes, String type, String register) {
-        return String.format("%s = load %s, %s* %s", registerRes, type, type, register);
+    public String store(String eType, String fromReg, String addressType, String toReg){
+        return String.format("store %s %s, %s %s", eType, fromReg, addressType, toReg);
     }
 
     public String throw_oob() {
@@ -166,6 +189,12 @@ public class LLVMUtil {
     public String ret(String retType, String retRegister) {
         return String.format("ret %s %s", retType, retRegister);
     }
+
+    public String callMethod(String targetReg, String methodSignature){
+        return String.format("%s = call %s", targetReg, methodSignature);
+    }
+
+
     // endregion
 
     public enum ArithmeticOp {

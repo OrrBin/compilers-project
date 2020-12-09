@@ -100,8 +100,8 @@ public class AstNodeUtil {
         return extendingClasses;
     }
 
-    public int getNumOfMethods(ClassDecl classDecl) {
-        Set<String> methodNames = new HashSet<>();
+    private Map<Integer, String> getMethodsByHeirOrder(ClassDecl classDecl) {
+        Map<Integer, String> methodOrder2Names = new HashMap<>();
         Stack<ClassDecl> ancestorClassPath = new Stack<>();
         ancestorClassPath.push(classDecl);
 
@@ -119,10 +119,33 @@ public class AstNodeUtil {
         //now curClass is the first super class
         //descending the path and collecting methods
 
+        int methodCnt = 0;
         while(!ancestorClassPath.empty()){
             curClass = ancestorClassPath.pop();
-            curClass.methoddecls().forEach(methodDecl -> methodNames.add(methodDecl.name()));
+            var methods = curClass.methoddecls();
+            for(var method : methods ){
+                if(methodOrder2Names.containsValue(method.name())) {continue;}
+                methodCnt ++;
+                methodOrder2Names.put(methodCnt, method.name());
+            }
         }
+        return methodOrder2Names;
+    }
+
+    public int getMethodIdxInVtable(MethodCallExpr methodCall) {
+        var classDecl = getClassDeclaration(methodCall);
+        var methodsByHeirOrder = getMethodsByHeirOrder(classDecl);
+        var methodsKeySet = methodsByHeirOrder.keySet();
+        for (var methodIdx : methodsKeySet) {
+            if (methodsByHeirOrder.get(methodIdx).equals(methodCall.methodId())) {
+                return methodIdx;
+            }
+        }
+        return 0;
+    }
+
+    public int getNumOfMethods(ClassDecl classDecl) {
+        Map<Integer, String> methodNames = getMethodsByHeirOrder(classDecl);
         return methodNames.size();
     }
 
@@ -195,8 +218,7 @@ public class AstNodeUtil {
     public boolean isField(VariableIntroduction var) {
         return !isLocal(var) && !isParameter(var);
     }
-
-
+    
     public boolean isField(IdentifierExpr var) {
         return !isLocal(var) && !isParameter(var);
     }

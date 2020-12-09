@@ -10,6 +10,8 @@ import solution.utils.RegisterCounter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -44,6 +46,14 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(Program program) {
+        try {
+            methodBuilder.appendBody("\n");
+            methodBuilder.appendBody(Files.readString(Path.of("/Users/ozzafar/IdeaProjects/compilers-project/src/solution/prog_set_up")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        program.mainClass().accept(this);
         for (var classDecl : program.classDecls()) {
             classDecl.accept(this);
         }
@@ -58,7 +68,9 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(MainClass mainClass) {
-
+        methodBuilder.appendBody("define i32 @main() {");
+        mainClass.mainStatement().accept(this);
+        methodBuilder.appendBody("}");
     }
 
     @Override

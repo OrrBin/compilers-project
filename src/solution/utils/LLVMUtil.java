@@ -122,10 +122,6 @@ public class LLVMUtil {
         return String.format( "%s = getelementptr %s, %s %s, i32 %d", targetReg, eType, ptrType, addressReg, idxEntry);
     }
 
-    public String load(String targetReg, String eType, String addressType, String fromReg){
-        return String.format("%s = load %s, %s %s", targetReg, eType, addressType, fromReg);
-    }
-
     public String load(String registerRes, String type, String register) {
         return String.format("%s = load %s, %s* %s", registerRes, type, type, register);
     }
@@ -151,7 +147,7 @@ public class LLVMUtil {
     }
 
     public String print(int num) {
-        return String.format("call void (i32) @print_int(%d)", num);
+        return String.format("call void (i32) @print_int(i32 %d)", num);
     }
 
     public String store(String type, int value, String register) {
@@ -162,9 +158,9 @@ public class LLVMUtil {
         return String.format("store %s %s, %s* %s", type, valueRegister, type, register);
     }
 
-    public String store(String eType, String fromReg, String addressType, String toReg){
-        return String.format("store %s %s, %s %s", eType, fromReg, addressType, toReg);
-    }
+//    public String store(String eType, String fromReg, String addressType, String toReg){
+//        return String.format("store %s %s, %s %s", eType, fromReg, addressType, toReg);
+//    }
 
     public String throw_oob() {
         return "call void @throw_oob()";

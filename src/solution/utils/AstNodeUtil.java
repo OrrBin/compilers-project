@@ -9,7 +9,6 @@ import solution.symbol_table.symbol_table_types.SymbolTable4Prog;
 import solution.symbol_table.symbol_types.SymbolKey;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 
-import java.awt.image.BandedSampleModel;
 import java.util.*;
 
 public class AstNodeUtil {
@@ -100,8 +99,10 @@ public class AstNodeUtil {
         return extendingClasses;
     }
 
-    private Map<Integer, String> getMethodsByHeirOrder(ClassDecl classDecl) {
-        Map<Integer, String> methodOrder2Names = new HashMap<>();
+    //isMethod == true if we wan tot get methods by heir order
+    //isMethod == false if we wan tot get fields by heir order
+    private Map<Integer, String> getByHeirOrder(ClassDecl classDecl, boolean isMethodCalling) {
+        Map<Integer, String> Order2Names = new HashMap<>();
         Stack<ClassDecl> ancestorClassPath = new Stack<>();
         ancestorClassPath.push(classDecl);
 
@@ -119,22 +120,41 @@ public class AstNodeUtil {
         //now curClass is the first super class
         //descending the path and collecting methods
 
-        int methodCnt = -1;
-        while(!ancestorClassPath.empty()){
-            curClass = ancestorClassPath.pop();
-            var methods = curClass.methoddecls();
-            for(var method : methods ){
-                if(methodOrder2Names.containsValue(method.name())) {continue;}
-                methodCnt ++;
-                methodOrder2Names.put(methodCnt, method.name());
+
+        if(isMethodCalling) {
+            int methodCnt = -1;
+            while (!ancestorClassPath.empty()) {
+                curClass = ancestorClassPath.pop();
+                var methods = curClass.methoddecls();
+                for (var method : methods) {
+                    if (Order2Names.containsValue(method.name())) {
+                        continue;
+                    }
+                    methodCnt++;
+                    Order2Names.put(methodCnt, method.name());
+                }
             }
         }
-        return methodOrder2Names;
+        else{
+            int fieldCnt = -1;
+            while (!ancestorClassPath.empty()) {
+                curClass = ancestorClassPath.pop();
+                var fields = curClass.fields();
+                for (var field : fields) {
+                    if (Order2Names.containsValue(field.name())) {
+                        continue;
+                    }
+                    fieldCnt++;
+                    Order2Names.put(fieldCnt, field.name());
+                }
+            }
+        }
+        return Order2Names;
     }
 
     public int getMethodIdxInVtable(MethodCallExpr methodCall) {
         var classDecl = getClassDeclaration(methodCall);
-        var methodsByHeirOrder = getMethodsByHeirOrder(classDecl);
+        var methodsByHeirOrder = getByHeirOrder(classDecl, true);
         var methodsKeySet = methodsByHeirOrder.keySet();
         for (var methodIdx : methodsKeySet) {
             if (methodsByHeirOrder.get(methodIdx).equals(methodCall.methodId())) {
@@ -145,10 +165,21 @@ public class AstNodeUtil {
     }
 
     public int getNumOfMethods(ClassDecl classDecl) {
-        Map<Integer, String> methodNames = getMethodsByHeirOrder(classDecl);
+        Map<Integer, String> methodNames = getByHeirOrder(classDecl, true);
         return methodNames.size();
     }
 
+    public int getFieldIdxInObjAlloc(AstNode curScope, String fieldName) {
+        var classDecl = getClassDeclaration(curScope);
+        var fieldsByHeirOrder = getByHeirOrder(classDecl, false);
+        var fieldKeySet = fieldsByHeirOrder.keySet();
+        for (var fieldIdx : fieldKeySet) {
+            if (fieldsByHeirOrder.get(fieldIdx).equals(fieldName)) {
+                return fieldIdx;
+            }
+        }
+        return 0;
+    }
     // endregion
 
     // region Variables

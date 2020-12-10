@@ -136,7 +136,7 @@ public class AstNodeUtil {
             }
         }
         else{
-            int fieldCnt = -1;
+            int fieldCnt = 0;
             while (!ancestorClassPath.empty()) {
                 curClass = ancestorClassPath.pop();
                 var fields = curClass.fields();
@@ -144,8 +144,8 @@ public class AstNodeUtil {
                     if (Order2Names.containsValue(field.name())) {
                         continue;
                     }
-                    fieldCnt++;
                     Order2Names.put(fieldCnt, field.name());
+                    fieldCnt += LLVMUtil.getTypeSize(field.type());
                 }
             }
         }

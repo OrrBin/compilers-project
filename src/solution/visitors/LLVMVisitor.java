@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import static solution.symbol_table.symbol_types.SymbolKeyType.METHOD;
+import static solution.symbol_table.symbol_types.SymbolKeyType.VAR;
 import static solution.utils.LLVMUtil.ArithmeticOp.*;
 import static solution.utils.LLVMUtil.getTypeName;
 
@@ -52,7 +53,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(Program program) {
         try {
             methodBuilder.appendBody("\n");
-            methodBuilder.appendBody(Files.readString(Path.of("src/solution/prog_set_up")));
+            methodBuilder.appendBody(Files.readString(Path.of("/Users/orrb/studies/compilers-project/src/solution/prog_set_up")));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -218,7 +219,7 @@ public class LLVMVisitor implements Visitor {
         Expr rv = assignStatement.rv();
         String lv = assignStatement.lv();
 
-        var var = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, lv, assignStatement);
+        var var = (VariableIntroduction) astNodeUtil.getDeclFromName(VAR, lv, assignStatement);
         String varType = getTypeName(var.type());
         String lvReg = "%" + lv;
 
@@ -226,7 +227,8 @@ public class LLVMVisitor implements Visitor {
             lvReg = getFieldLocFromHeap(var, varType, assignStatement);
         }
         rv.accept(this);
-        res = llvmUtil.store(varType, registerCounter.getLastRegister(), lvReg);
+        String rvReg = rv instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
+        res = llvmUtil.store(varType, rvReg, lvReg);
 
         methodBuilder.appendBodyLine(res);
     }
@@ -237,9 +239,14 @@ public class LLVMVisitor implements Visitor {
         Expr rv = assignArrayStatement.rv();
         Expr index = assignArrayStatement.index();
 
+        var lvIdReg = "%" + assignArrayStatement.lv();
+        VariableIntroduction var = (VariableIntroduction) astNodeUtil.getDeclFromName(VAR, assignArrayStatement.lv(), assignArrayStatement);
+        if(astNodeUtil.isField(var)) {
+            lvIdReg = getFieldLocFromHeap(var, getTypeName(var.type()), assignArrayStatement);
+        }
+
         // Load the address of the x array
         String arrRegister = registerCounter.allocateRegister();
-        var lvIdReg = "%" + assignArrayStatement.lv();
         methodBuilder.appendBodyLine(llvmUtil.load(arrRegister, I_32_P, lvIdReg));
 
         // continue the accessing procedure
@@ -272,7 +279,7 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), I_32, arrRegister, 0));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32, registerCounter.getRegister(2)));
         // Check that the index is less than the size of the array
-        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(),I_32, registerCounter.getRegister(2), indexRegister));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLE, registerCounter.allocateRegister(),I_32, registerCounter.getRegister(2), indexRegister));
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc4, arr_alloc5));
         // Else throw out of bounds exception
         methodBuilder.appendLabel(arr_alloc4);
@@ -407,10 +414,10 @@ public class LLVMVisitor implements Visitor {
         //array length is stored at array[0]
         //getting pointer to array[0]
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
-                I_32_P, "i32**", registerCounter.getLastRegister(), 0));
+                I_32, I_32_P, registerCounter.getRegister(2), 0));
 
         //accessing array[0] using the pointer
-        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32, registerCounter.getLastRegister()));
+        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32, registerCounter.getRegister(2)));
     }
 
     @Override
@@ -421,7 +428,6 @@ public class LLVMVisitor implements Visitor {
         // call the owner expression's visitor
         var owner = e.ownerExpr();
         owner.accept(this);
-        String ownerReg = registerCounter.getLastRegister();
 
         // Do the required bitcasts, so that we can access the vtable pointer - we're holding a pointer to i8**
         // e.g. %_7 = bitcast i8* %_6 to i8***
@@ -430,6 +436,9 @@ public class LLVMVisitor implements Visitor {
         // e.g. %_8 = load i8**, i8*** %_7
 
         // bitcast & load to access the vtable ptr
+
+        String ownerReg = owner instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
+
         methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
                 I_8_P, ownerReg, I_8_P + "**"));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(),
@@ -483,7 +492,8 @@ public class LLVMVisitor implements Visitor {
             if (methodPtrReg != null) {
                 Expr expr = actuals.get(i);
                 expr.accept(this);
-                methodArgsTypes.append(" ").append(registerCounter.getLastRegister());
+                String actualReg = expr instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
+                methodArgsTypes.append(" ").append(actualReg);
             }
             methodArgsTypes.append(", ");
         }
@@ -520,7 +530,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(IdentifierExpr e) {
         var id = e.id();
         var idReg = "%" + id;
-        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, id, e);
+        var declNode = (VariableIntroduction) astNodeUtil.getDeclFromName(VAR, id, e);
         String varType = getTypeName(declNode.type());
         if(astNodeUtil.isField(declNode)) {
             idReg = getFieldLocFromHeap(declNode, varType, e);
@@ -543,8 +553,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
-        var thisReg = "%this";
-        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P, thisReg));
+//        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P, THIS_REG));
     }
 
     @Override
@@ -671,7 +680,7 @@ public class LLVMVisitor implements Visitor {
 
         var keySet = fieldsNameType.keySet();
         for(var field : keySet){
-            sizeOfFields += llvmUtil.getTypeSize(fieldsNameType.get(field));
+            sizeOfFields += LLVMUtil.getTypeSize(fieldsNameType.get(field));
         }
         return sizeOfFields;
     }
@@ -681,7 +690,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(NotExpr e) {
         e.e().accept(this);
         methodBuilder.appendBodyLine(llvmUtil.op(SUB, registerCounter.allocateRegister(), I_1,
-                1, registerCounter.getLastRegister()));
+                1, registerCounter.getRegister(2)));
     }
 
     @Override

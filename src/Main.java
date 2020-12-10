@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Main {
-    public static void main(String [] args){
+    public static void tmpMain(String [] args){
         String [] secMainArgs = new String[4];
         List<Pair<String, String>> simpleTests = new ArrayList<>();
 
@@ -48,11 +48,11 @@ public class Main {
             secMainArgs[2] = fileNamePrefix + item.fst;
             secMainArgs[3] = outFileNamePrefix + item.snd + ".ll";
 
-            SecondaryMain(secMainArgs);
+            main(secMainArgs);
         }
     }
 
-    public static void SecondaryMain(String [] args) {
+    public static void main(String [] args) {
         try {
             var inputMethod = args[0];
             var action = args[1];

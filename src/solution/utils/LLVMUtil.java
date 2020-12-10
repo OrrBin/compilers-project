@@ -40,7 +40,7 @@ public class LLVMUtil {
         throw new IllegalArgumentException("Unknown type");
     }
 
-    public int getTypeSize(AstType type) {
+    public static int getTypeSize(AstType type) {
         if (type == null) {
             return 0;
         }
@@ -196,7 +196,7 @@ public class LLVMUtil {
     // endregion
 
     public enum ArithmeticOp {
-        ADD("add"), MUL("mul"), SUB("sub"), SLT("icmp slt");
+        ADD("add"), MUL("mul"), SUB("sub"), SLT("icmp slt"), SLE("icmp sle");
 
         public final String op;
 

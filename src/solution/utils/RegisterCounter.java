@@ -1,5 +1,8 @@
 package solution.utils;
 
+import ast.Expr;
+import ast.ThisExpr;
+
 public class RegisterCounter {
 
     private int registerCounter = 0;

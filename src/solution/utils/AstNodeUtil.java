@@ -327,6 +327,8 @@ public class AstNodeUtil {
             symbolTable = symbolTable.parentSymbolTable;
             scope = symbolTable.symbolTableScope;
         }
+
+        Collections.reverse(hierarchy);
         return hierarchy;
     }
 

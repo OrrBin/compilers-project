@@ -12,11 +12,10 @@ import solution.utils.AstNodeUtil;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class Main {
-    public static void tmpMain(String [] args){
+    public static void secondaryMain(String [] args){
         String [] secMainArgs = new String[4];
         List<Pair<String, String>> simpleTests = new ArrayList<>();
 

@@ -4,6 +4,7 @@ import ast.*;
 import solution.llvm_builders.MethodLLVMBuilder;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
+import solution.utils.Constants;
 import solution.utils.LLVMUtil;
 import solution.utils.LabelCounter;
 import solution.utils.RegisterCounter;
@@ -51,12 +52,8 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(Program program) {
-        try {
-            methodBuilder.appendBody("\n");
-            methodBuilder.appendBody(Files.readString(Path.of("/Users/ozzafar/IdeaProjects/compilers-project/src/solution/prog_set_up")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        methodBuilder.appendBody("\n");
+        methodBuilder.appendBody(Constants.PROGRAM_SET_UP);
 
         program.mainClass().accept(this);
         for (var classDecl : program.classDecls()) {
@@ -204,7 +201,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(SysoutStatement sysoutStatement) {
         String llvmLine;
         Expr arg = sysoutStatement.arg();
-        if (arg instanceof IntegerLiteralExpr){
+        if (arg instanceof IntegerLiteralExpr) {
             llvmLine = llvmUtil.print(((IntegerLiteralExpr) arg).num());
         } else {
             arg.accept(this);
@@ -223,7 +220,7 @@ public class LLVMVisitor implements Visitor {
         String varType = getTypeName(var.type());
         String lvReg = "%" + lv;
 
-        if(astNodeUtil.isField(var)) {
+        if (astNodeUtil.isField(var)) {
             lvReg = getFieldLocFromHeap(var, varType, assignStatement);
         }
         rv.accept(this);
@@ -241,7 +238,7 @@ public class LLVMVisitor implements Visitor {
 
         var lvIdReg = "%" + assignArrayStatement.lv();
         VariableIntroduction var = (VariableIntroduction) astNodeUtil.getDeclFromName(VAR, assignArrayStatement.lv(), assignArrayStatement);
-        if(astNodeUtil.isField(var)) {
+        if (astNodeUtil.isField(var)) {
             lvIdReg = getFieldLocFromHeap(var, getTypeName(var.type()), assignArrayStatement);
         }
 
@@ -268,7 +265,7 @@ public class LLVMVisitor implements Visitor {
         // Check that the index is greater than zero
         index.accept(this);
         String indexRegister = registerCounter.getLastRegister();
-        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(),I_32, indexRegister, 0));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLT, registerCounter.allocateRegister(), I_32, indexRegister, 0));
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc2, arr_alloc3));
         // Else throw out of bounds exception
         methodBuilder.appendLabel(arr_alloc2);
@@ -279,7 +276,7 @@ public class LLVMVisitor implements Visitor {
         methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), I_32, arrRegister, 0));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_32, registerCounter.getRegister(2)));
         // Check that the index is less than the size of the array
-        methodBuilder.appendBodyLine(llvmUtil.op(SLE, registerCounter.allocateRegister(),I_32, registerCounter.getRegister(2), indexRegister));
+        methodBuilder.appendBodyLine(llvmUtil.op(SLE, registerCounter.allocateRegister(), I_32, registerCounter.getRegister(2), indexRegister));
         methodBuilder.appendBodyLine(llvmUtil.br(registerCounter.getLastRegister(), arr_alloc4, arr_alloc5));
         // Else throw out of bounds exception
         methodBuilder.appendLabel(arr_alloc4);
@@ -368,10 +365,9 @@ public class LLVMVisitor implements Visitor {
         //case2: neither is int-literal
         if (!(e1 instanceof IntegerLiteralExpr) && !(e2 instanceof IntegerLiteralExpr)) {
             zeroIntLiteral(e, op);
-        }
-        else {
+        } else {
             //case3: e1 is int-literal
-         if (e1 instanceof IntegerLiteralExpr) {
+            if (e1 instanceof IntegerLiteralExpr) {
                 litOnRight = false;
                 Expr tmp = e1;
                 e1 = e2;
@@ -478,7 +474,7 @@ public class LLVMVisitor implements Visitor {
         return callMethodLLVM(e, null, null);
     }
 
-    private String callMethodLLVM(MethodCallExpr e, String thisRegister, String methodPtrReg){
+    private String callMethodLLVM(MethodCallExpr e, String thisRegister, String methodPtrReg) {
 
         var methodDecl = (MethodDecl) astNodeUtil.getDeclFromName(METHOD, e.methodId(), e);
         var retType = getTypeName(methodDecl.returnType());
@@ -532,21 +528,21 @@ public class LLVMVisitor implements Visitor {
         var idReg = "%" + id;
         var declNode = (VariableIntroduction) astNodeUtil.getDeclFromName(VAR, id, e);
         String varType = getTypeName(declNode.type());
-        if(astNodeUtil.isField(declNode)) {
+        if (astNodeUtil.isField(declNode)) {
             idReg = getFieldLocFromHeap(declNode, varType, e);
         }
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), varType, idReg));
     }
 
-    private String getFieldLocFromHeap( VariableIntroduction declNode, String varType, AstNode scope) {
+    private String getFieldLocFromHeap(VariableIntroduction declNode, String varType, AstNode scope) {
 
-            String varTypePtr = varType + "*";
-            int fieldPos = astNodeUtil.getFieldIdxInObjAlloc(scope, declNode.name()) + VTABLEBYTES_P;
-            methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
-                    I_8, I_8_P, THIS_REG, fieldPos));
+        String varTypePtr = varType + "*";
+        int fieldPos = astNodeUtil.getFieldIdxInObjAlloc(scope, declNode.name()) + VTABLEBYTES_P;
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(),
+                I_8, I_8_P, THIS_REG, fieldPos));
 
-            methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
-                    I_8_P, registerCounter.getRegister(2), varTypePtr));
+        methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
+                I_8_P, registerCounter.getRegister(2), varTypePtr));
 
         return registerCounter.getLastRegister();
     }
@@ -624,10 +620,10 @@ public class LLVMVisitor implements Visitor {
         //e.g. %_2 = getelementptr [2 x i8*], [2 x i8*]* @.Base_vtable, i32 0, i32 0
         String firstEVTable = registerCounter.allocateRegister();
         int numOfMethods = astNodeUtil.getNumOfMethods(classDecl);
-        String vTableElements = String.format("[%s x " + I_8_P + "]",numOfMethods);
-        String vTableElementsPtr = vTableElements +"*";
+        String vTableElements = String.format("[%s x " + I_8_P + "]", numOfMethods);
+        String vTableElementsPtr = vTableElements + "*";
         String classNameVtable = classDecl.name() + "_vtable";
-        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(firstEVTable,vTableElements,
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(firstEVTable, vTableElements,
                 vTableElementsPtr, classNameVtable, 0, 0));
 
         // Set the vtable to the correct address.
@@ -637,7 +633,7 @@ public class LLVMVisitor implements Visitor {
         // enforce last register to point the allocated object
 
         String tmp = "tmp" + spareLabels4Tmp.allocateLabelNumber();
-        String tmpRegister = "%" + tmp ;
+        String tmpRegister = "%" + tmp;
         methodBuilder.appendBodyLine(llvmUtil.alloca(tmp, I_8_P));
         methodBuilder.appendBodyLine(llvmUtil.store(I_8_P, heapLocReg, tmpRegister));
         methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P, tmpRegister));
@@ -653,7 +649,7 @@ public class LLVMVisitor implements Visitor {
         return vTableAddress + space4Fields;
     }
 
-    private int getSizeOfFields(ClassDecl classDecl){
+    private int getSizeOfFields(ClassDecl classDecl) {
         int sizeOfFields = 0;
         Map<String, AstType> fieldsNameType = new HashMap<>();
         Stack<ClassDecl> ancestorClassPath = new Stack<>();
@@ -663,23 +659,25 @@ public class LLVMVisitor implements Visitor {
         var parentClass = astNodeUtil.getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
 
         //climb up the ancestor tree till reaching root
-        while(parentClass != null){
-            if(parentClass instanceof Program) {break;}
+        while (parentClass != null) {
+            if (parentClass instanceof Program) {
+                break;
+            }
 
-            curClass = (ClassDecl)parentClass;
+            curClass = (ClassDecl) parentClass;
             ancestorClassPath.push(curClass);
             parentClass = astNodeUtil.getEnclosingScope(curClass).parentSymbolTable.symbolTableScope;
         }
         //now curClass is the first super class
         //descending the path and collecting methods
 
-        while(!ancestorClassPath.empty()){
+        while (!ancestorClassPath.empty()) {
             curClass = ancestorClassPath.pop();
-            curClass.fields().forEach(field->fieldsNameType.put(field.name(), field.type()));
+            curClass.fields().forEach(field -> fieldsNameType.put(field.name(), field.type()));
         }
 
         var keySet = fieldsNameType.keySet();
-        for(var field : keySet){
+        for (var field : keySet) {
             sizeOfFields += LLVMUtil.getTypeSize(fieldsNameType.get(field));
         }
         return sizeOfFields;

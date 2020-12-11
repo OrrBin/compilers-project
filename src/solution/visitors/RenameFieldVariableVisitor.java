@@ -42,12 +42,19 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
     public void visit(AssignStatement assignStatement) {
         boolean isField = true;
         var lv = assignStatement.lv();
-        if (lv.equals(op.originalName)) {
+        var name = op.originalName;
+        if (lv.equals(name)) {
             MethodDecl method = (MethodDecl) astNodeUtil.getEnclosingScope(assignStatement).symbolTableScope;
             for (VarDecl var : method.vardecls()) {
-                if (var.name().equals(op.originalName)) {
+                if (var.name().equals(name)) {
                     /* enclosing method contains local variable with same name,
                       since var declarations are at the beginning of the method - the local var overrides the field */
+                    isField = false;
+                }
+            }
+            for (FormalArg arg : method.formals()) {
+                if (arg.name().equals(name)) {
+                    /* enclosing method contains formal arg with same name */
                     isField = false;
                 }
             }
@@ -62,12 +69,19 @@ public class RenameFieldVariableVisitor extends RenameVariableVisitor {
     public void visit(AssignArrayStatement assignArrayStatement) {
         boolean isField = true;
         var lv = assignArrayStatement.lv();
-        if (lv.equals(op.originalName)) {
+        var name = op.originalName;
+        if (lv.equals(name)) {
             MethodDecl method = astNodeUtil.getMethod(assignArrayStatement);
             for (VarDecl var : method.vardecls()) {
-                if (var.name().equals(op.originalName)) {
+                if (var.name().equals(name)) {
                     /* enclosing method contains local variable with same name,
                       since var declarations are at the beginning of the method - the local var overrides the field */
+                    isField = false;
+                }
+            }
+            for (FormalArg arg : method.formals()) {
+                if (arg.name().equals(name)) {
+                    /* enclosing method contains formal arg with same name */
                     isField = false;
                 }
             }

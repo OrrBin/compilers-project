@@ -14,6 +14,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -224,8 +225,7 @@ public class LLVMVisitor implements Visitor {
             lvReg = getFieldLocFromHeap(var, varType, assignStatement);
         }
         rv.accept(this);
-        String rvReg = rv instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
-        res = llvmUtil.store(varType, rvReg, lvReg);
+        res = llvmUtil.store(varType, registerCounter.getLastRegister(), lvReg);
 
         methodBuilder.appendBodyLine(res);
     }
@@ -433,7 +433,7 @@ public class LLVMVisitor implements Visitor {
 
         // bitcast & load to access the vtable ptr
 
-        String ownerReg = owner instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
+        String ownerReg = registerCounter.getLastRegister();
 
         methodBuilder.appendBodyLine(llvmUtil.bitcast(registerCounter.allocateRegister(),
                 I_8_P, ownerReg, I_8_P + "**"));
@@ -488,7 +488,7 @@ public class LLVMVisitor implements Visitor {
             if (methodPtrReg != null) {
                 Expr expr = actuals.get(i);
                 expr.accept(this);
-                String actualReg = expr instanceof ThisExpr ? THIS_REG : registerCounter.getLastRegister();
+                String actualReg = registerCounter.getLastRegister();
                 methodArgsTypes.append(" ").append(actualReg);
             }
             methodArgsTypes.append(", ");
@@ -549,7 +549,7 @@ public class LLVMVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
-//        methodBuilder.appendBodyLine(llvmUtil.load(registerCounter.allocateRegister(), I_8_P, THIS_REG));
+        methodBuilder.appendBodyLine(llvmUtil.getElementPtr(registerCounter.allocateRegister(), I_8, I_8_P, THIS_REG, 0));
     }
 
     @Override

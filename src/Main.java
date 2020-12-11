@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void secondaryMain(String [] args){
+    public static void orMain(String [] args){
         String [] secMainArgs = new String[4];
         List<Pair<String, String>> simpleTests = new ArrayList<>();
 

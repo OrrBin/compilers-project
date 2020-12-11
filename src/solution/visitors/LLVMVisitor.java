@@ -53,7 +53,7 @@ public class LLVMVisitor implements Visitor {
     public void visit(Program program) {
         try {
             methodBuilder.appendBody("\n");
-            methodBuilder.appendBody(Files.readString(Path.of("/Users/orrb/studies/compilers-project/src/solution/prog_set_up")));
+            methodBuilder.appendBody(Files.readString(Path.of("/Users/ozzafar/IdeaProjects/compilers-project/src/solution/prog_set_up")));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -589,7 +589,7 @@ public class LLVMVisitor implements Visitor {
         //Allocate sz + 1 integers (4 bytes each)
         String arrHeapLocReg = registerCounter.allocateRegister();
         int sizeOfInt = 4;
-        methodBuilder.appendBodyLine(llvmUtil.calloc(arrHeapLocReg, arrSizeReg, sizeOfInt));
+        methodBuilder.appendBodyLine(llvmUtil.calloc(arrHeapLocReg, arrSizeWithSpace4SizeReg, sizeOfInt));
 
         //Cast the returned pointer
         String castedPtrReg = registerCounter.allocateRegister();

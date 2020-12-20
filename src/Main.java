@@ -2,13 +2,11 @@ import ast.AstPrintVisitor;
 import ast.AstXMLSerializer;
 import ast.Program;
 import jflex.base.Pair;
-import solution.LLVMGenerator;
-import solution.RenameOpParams;
-import solution.Renamer;
-import solution.SymbolTablesManager;
+import solution.*;
 import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.SymbolTablePreInitVisitor;
 import solution.utils.AstNodeUtil;
+import solution.visitors.SemanticsCheckVisitor;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -45,14 +43,20 @@ public class Main {
                     outFile.write(astPrinter.getString());
 
                 } else if (action.equals("semantic")) {
-                    throw new UnsupportedOperationException("TODO - Ex. 3");
+
+                    // initialize symbol tables
+                    SymbolTablesManager manager = activateSymbolTable(prog);
+
+                    AstNodeUtil util = new AstNodeUtil(manager);
+                    SemanticsCheckGenerator generator = new SemanticsCheckGenerator(prog, util);
+
+                    OutputStream os = new FileOutputStream(outfilename);
+                    generator.generate(os);
+
 
                 } else if (action.equals("compile")) {
                     // initialize symbol tables
-                    SymbolTablesManager manager = new SymbolTablesManager();
-                    var preInitVisitor = new SymbolTablePreInitVisitor(manager);
-                    prog.accept(preInitVisitor);
-                    prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
+                    SymbolTablesManager manager = activateSymbolTable(prog);
 
                     AstNodeUtil util = new AstNodeUtil(manager);
                     LLVMGenerator generator = new LLVMGenerator(prog, util);
@@ -76,10 +80,7 @@ public class Main {
                     }
 
                     // initialize symbol tables
-                    SymbolTablesManager manager = new SymbolTablesManager();
-                    var preInitVisitor = new SymbolTablePreInitVisitor(manager);
-                    prog.accept(preInitVisitor);
-                    prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
+                    SymbolTablesManager manager = activateSymbolTable(prog);
 
                     // execute renaming
                     AstNodeUtil util = new AstNodeUtil(manager);
@@ -105,6 +106,14 @@ public class Main {
             System.out.println("General error: " + e);
             e.printStackTrace();
         }
+    }
+
+    private static SymbolTablesManager activateSymbolTable(Program prog) {
+        SymbolTablesManager manager = new SymbolTablesManager();
+        var preInitVisitor = new SymbolTablePreInitVisitor(manager);
+        prog.accept(preInitVisitor);
+        prog.accept(new SymbolTableInitVisitor(manager, preInitVisitor.name2AstNodeMap));
+        return manager;
     }
 
     public static void testMain(String [] args){

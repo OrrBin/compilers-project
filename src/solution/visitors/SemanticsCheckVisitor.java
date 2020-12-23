@@ -3,12 +3,24 @@ package solution.visitors;
 import ast.*;
 import solution.utils.AstNodeUtil;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class SemanticsCheckVisitor implements Visitor {
 
     OutputStream outputStream;
     AstNodeUtil util;
+    boolean isOk = true;
+    AstType lastType = new IntAstType();
+
+    //region constants
+    String OK = "OK";
+    String ERROR = "ERROR";
+    //endregion
 
     public SemanticsCheckVisitor(OutputStream outputStream, AstNodeUtil util){
         this.outputStream = outputStream;
@@ -21,11 +33,51 @@ public class SemanticsCheckVisitor implements Visitor {
     @Override
     public void visit(Program program) {
 
+        // need2Check - #3 (no two classes with the same name)
+        Set<String> name2TimesSet = new HashSet<>();
+        var classes = program.classDecls();
+        for(var clazz : classes){
+            if(name2TimesSet.contains(clazz.name())) {
+                isOk = false;
+                write2File();
+                return;
+            }
+            name2TimesSet.add(clazz.name());
+        }
+
+        // visitor calls
+        program.mainClass().accept(this);
+
+        for(var classDecl : classes) {
+            classDecl.accept(this);
+            if(!isOk) {return;}
+        }
+        write2File();
+
+    }
+
+    private void write2File() {
+        try {
+            if (isOk) {
+                outputStream.write(OK.getBytes());
+            } else {
+                outputStream.write(ERROR.getBytes());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visit(ClassDecl classDecl) {
-
+        // need2Check - #1 (a class doesn't inherit itself)
+        var classHierarchy = util.getClassHierarchy(classDecl);
+        if(classHierarchy == null){
+            isOk = false;
+            write2File();
+            return;
+        }
+        classDecl.methoddecls().forEach(method-> method.accept(this));
     }
 
     @Override

@@ -21,7 +21,7 @@ public class SemanticsCheckGenerator {
 
     public void generate(OutputStream outputStream) {
 
-        SemanticsCheckVisitor llvmVisitor = new SemanticsCheckVisitor(outputStream, util);
-        program.accept(llvmVisitor);
+        SemanticsCheckVisitor semanticsCheckVisitor = new SemanticsCheckVisitor(outputStream, util);
+        program.accept(semanticsCheckVisitor);
     }
 }

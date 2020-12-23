@@ -314,20 +314,27 @@ public class AstNodeUtil {
     // endregion
 
 
-    // find class inhering hierarchy (including the current class)
+    /* find class inhering hierarchy (including the current class).
+    the first element in ret is the first superclass.
+    the last element is the current class.
+     */
     public List<ClassDecl> getClassHierarchy(AstNode astNode) {
         List<ClassDecl> hierarchy = new ArrayList<>();
         ClassDecl classDecl = getClassDeclaration(astNode);
         SymbolTable symbolTable = getEnclosingScope(classDecl);
         AstNode scope = symbolTable.symbolTableScope;
-
-        while (scope instanceof ClassDecl) {
-            ClassDecl clazz = (ClassDecl) scope;
+        ClassDecl clazz;
+        do {
+            clazz = (ClassDecl) scope;
             hierarchy.add(clazz);
             symbolTable = symbolTable.parentSymbolTable;
             scope = symbolTable.symbolTableScope;
-        }
+        }  while (scope instanceof ClassDecl  && (hierarchy.size() >1 && !clazz.name().equals(classDecl.name())));
 
+        //a class inherit itself
+        if( hierarchy.size() > 1 && clazz.name().equals(classDecl.name())){
+            return null;
+        }
         Collections.reverse(hierarchy);
         return hierarchy;
     }

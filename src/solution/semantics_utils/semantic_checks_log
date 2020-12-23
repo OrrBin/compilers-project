@@ -1,0 +1,83 @@
+
+The following is the requirement that need to be checked:
+
+TBD:
+1. a.  The superclass of a class precedes it in the file: when class B extends A, the class A was defined,
+    and the definition of A must come before that of B.
+
+2. The main class (the class containing the main method) cannot be extended.
+
+4. The same name cannot be used for the same field in one class.
+   This includes fields defined in a class and a subclass (even though this is legal in real Java).
+
+5. The same name cannot be used for the same method in one class - overloading is not supported.
+
+6. An overriding method matches the ancestor's method signature with the same name
+   (same number of arguments, same static type of arguments, a covariant static return type).
+    Note that overloading is not supported.
+
+7. *won't be tested* The name this cannot be used for the name of a variable, field, formal parameter, or method.
+
+8. A type declaration of a reference type of A refers to classes that are defined somewhere in the file
+   (either before or after the same class, or to the same class itself).
+
+9. new A() is invoked for a class A that is defined somewhere in the file
+   (either before or after the same class, or to the same class itself).
+
+10. In method invocation, the static type of the object is a reference type (not int, bool, or int[]).
+
+11. A method call is to a method that was defined in the class according to the static type of the object,
+    and further, the type of the actual parameters matches the definition.
+    Namely, in e.f(a_1, ..., a_k), the method f was defined in class A where A is the static type of e,
+    it has k arguments, and the static type of each a_i matches (i.e. is a subtype of)
+    the type of the i'th formal parameter of said definition.
+
+12. A method call is invoked on an owner expression e (e.g. e.f(...)) which is either this,
+    a new expression, or a reference to a local variable, formal parameter or a field.
+
+13. The static type of the object on which length invoked is int[].
+
+14. A reference in an expression to a variable
+    (i.e., not in a role of a method name in a call or a class name in new)
+    is to a local variable or formal parameter defined in the current method,
+    or to a field defined in the current class or its superclasses.
+
+15. Every local variable is definitely initialized (assigned to) before it is used. See below.
+
+16. In an assignment x = e, the static type of e is valid according to the declaration of x. Note subtyping!
+
+17. In if and while, the condition is boolean.
+
+18. The static type of e in return e is valid according to the definition of the current method. Note subtyping!
+
+19. *won't be tested* The argument of the main method (e.g. args in public static void main(String[] args))
+    is not referenced.
+
+20. The argument to System.out.println is of type int.
+
+21. The arguments to the predefined operators (&&, <, !, +, -, * etc.) are of the correct type.
+
+22. In an array access x[e], x is int[] and e is an int.
+
+23. In an assignment to an array x[e1] = e2, x is int[], e1 is an int and also e2 is an int.
+
+24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
+    or formal parameters.
+
+25. updated In an array allocation new int[e], e is an int.
+
+
+
+
+Done but not tested:
+
+
+
+
+
+Done:
+   1.b. In particular, there are no cycles in the inheritance graph - i.e.,
+    check to be sure that no class directly or indirectly extends itself.
+
+3. The same name cannot be used to name two classes.
+   (Including the class containing the main method.)

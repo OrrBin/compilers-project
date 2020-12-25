@@ -35,8 +35,6 @@ TBD:
 12. A method call is invoked on an owner expression e (e.g. e.f(...)) which is either this,
     a new expression, or a reference to a local variable, formal parameter or a field.
 
-13. The static type of the object on which length invoked is int[].
-
 14. A reference in an expression to a variable
     (i.e., not in a role of a method name in a call or a class name in new)
     is to a local variable or formal parameter defined in the current method,
@@ -46,12 +44,21 @@ TBD:
 
 16. In an assignment x = e, the static type of e is valid according to the declaration of x. Note subtyping!
 
-17. In if and while, the condition is boolean.
-
 18. The static type of e in return e is valid according to the definition of the current method. Note subtyping!
 
 19. *won't be tested* The argument of the main method (e.g. args in public static void main(String[] args))
     is not referenced.
+
+24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
+    or formal parameters.
+
+
+
+Done but not tested:
+
+13. The static type of the object on which length invoked is int[].
+
+17. In if and while, the condition is boolean.
 
 20. The argument to System.out.println is of type int.
 
@@ -61,18 +68,7 @@ TBD:
 
 23. In an assignment to an array x[e1] = e2, x is int[], e1 is an int and also e2 is an int.
 
-24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
-    or formal parameters.
-
 25. updated In an array allocation new int[e], e is an int.
-
-
-
-
-Done but not tested:
-
-
-
 
 
 Done:

@@ -1,6 +1,7 @@
 package solution.visitors;
 
 import ast.*;
+import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
 
 import java.io.IOException;
@@ -107,17 +108,31 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
+        ifStatement.cond().accept(this);
+        if(!(lastType instanceof BoolAstType)) {
+            isOk = false;
+            write2File();
+        }
 
     }
 
     @Override
     public void visit(WhileStatement whileStatement) {
-
+        whileStatement.cond().accept(this);
+        if(!(lastType instanceof BoolAstType)) {
+            isOk = false;
+            write2File();
+        }
     }
 
     @Override
     public void visit(SysoutStatement sysoutStatement) {
+        sysoutStatement.arg().accept(this);
 
+        if(!(lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
     }
 
     @Override
@@ -128,43 +143,143 @@ public class SemanticsCheckVisitor implements Visitor {
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
 
+        // Check that lv is int[]
+        VariableIntroduction var = (VariableIntroduction) util.getDeclFromName(SymbolKeyType.VAR, assignArrayStatement.lv(), assignArrayStatement);
+        if(! (var.type() instanceof IntArrayAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        // Check that rv is int
+        assignArrayStatement.rv().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        // Check that index is int
+        assignArrayStatement.index().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
     }
 
     @Override
     public void visit(AndExpr e) {
+        e.e1().accept(this);
+        if(! (lastType instanceof BoolAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        e.e2().accept(this);
+        if(! (lastType instanceof BoolAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new BoolAstType();
     }
 
     @Override
     public void visit(LtExpr e) {
+        e.e1().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        e.e2().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new BoolAstType();
     }
 
     @Override
     public void visit(AddExpr e) {
+        e.e1().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        e.e2().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new IntAstType();
     }
 
     @Override
     public void visit(SubtractExpr e) {
+        e.e1().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        e.e2().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new IntAstType();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
                                         //TODO: Male Orr
     @Override
     public void visit(MultExpr e) {
+        e.e1().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        e.e2().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new IntAstType();
     }
 
     @Override
     public void visit(ArrayAccessExpr e) {
+        // Check that array expression is int[]
+        e.arrayExpr().accept(this);
+        if(! (lastType instanceof IntArrayAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        // Check that index is int
+        e.indexExpr().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
+
+        lastType = new IntAstType();
     }
 
     @Override
     public void visit(ArrayLengthExpr e) {
+        e.arrayExpr().accept(this);
+        if(!(lastType instanceof IntArrayAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        lastType = new IntAstType();
     }
 
     @Override
@@ -179,12 +294,13 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(TrueExpr e) {
+        lastType = new BoolAstType();
 
     }
 
     @Override
     public void visit(FalseExpr e) {
-
+        lastType = new BoolAstType();
     }
 
     @Override
@@ -199,7 +315,13 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(NewIntArrayExpr e) {
+        e.lengthExpr().accept(this);
+        if(! (lastType instanceof IntAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        lastType = new IntArrayAstType();
     }
 
     @Override
@@ -209,22 +331,28 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(NotExpr e) {
+        e.e().accept(this);
+        if(! (lastType instanceof BoolAstType)) {
+            isOk = false;
+            write2File();
+        }
 
+        lastType = new BoolAstType();
     }
 
     @Override
     public void visit(IntAstType t) {
-
+        lastType = new IntAstType();
     }
 
     @Override
     public void visit(BoolAstType t) {
-
+        lastType = new BoolAstType();
     }
 
     @Override
     public void visit(IntArrayAstType t) {
-
+        lastType = new IntArrayAstType();
     }
 
     @Override

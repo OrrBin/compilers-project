@@ -1,26 +1,27 @@
 package solution.visitors;
 
 import ast.*;
+import solution.exceptions.SemanticException;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SemanticsCheckVisitor implements Visitor {
 
-    OutputStream outputStream;
-    AstNodeUtil util;
-    boolean isOk = true;
-    AstType lastType = new IntAstType();
+    private OutputStream outputStream;
+    private AstNodeUtil util;
+    private boolean isOk = true;
+    private AstType lastType = new IntAstType();
 
     //region constants
-    String OK = "OK";
-    String ERROR = "ERROR";
+    private static final String OK = "OK";
+    private static final String ERROR = "ERROR";
     //endregion
 
     public SemanticsCheckVisitor(OutputStream outputStream, AstNodeUtil util){
@@ -88,7 +89,15 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
+        List<String> localNames = methodDecl.vardecls().stream().map(VariableIntroduction::name).collect(Collectors.toList());
+        if (hasDuplicates(localNames)){
+            throw new SemanticException("Found redeclaration of a local variable");
+        }
 
+        List<String> formalNames = methodDecl.formals().stream().map(VariableIntroduction::name).collect(Collectors.toList());
+        if (hasDuplicates(formalNames)){
+            throw new SemanticException("Found redeclaration of a formal variable");
+        }
     }
 
     @Override
@@ -359,4 +368,14 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(RefType t) {
 
     }
+
+    // region private method
+
+    private boolean hasDuplicates(List<String> names) {
+        Set<String> namesSet = new HashSet<>(names);
+        return namesSet.size() != names.size();
+    }
+
+    //endregion
+
 }

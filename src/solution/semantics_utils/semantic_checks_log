@@ -49,9 +49,6 @@ TBD:
 19. *won't be tested* The argument of the main method (e.g. args in public static void main(String[] args))
     is not referenced.
 
-24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
-    or formal parameters.
-
 
 
 Done but not tested:
@@ -67,6 +64,9 @@ Done but not tested:
 22. In an array access x[e], x is int[] and e is an int.
 
 23. In an assignment to an array x[e1] = e2, x is int[], e1 is an int and also e2 is an int.
+
+24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
+    or formal parameters.
 
 25. updated In an array allocation new int[e], e is an int.
 

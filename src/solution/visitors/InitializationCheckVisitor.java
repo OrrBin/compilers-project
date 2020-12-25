@@ -1,6 +1,7 @@
 package solution.visitors;
 
 import ast.*;
+import solution.exceptions.InitializationException;
 import solution.utils.AstNodeUtil;
 
 import java.util.*;
@@ -10,34 +11,19 @@ public class InitializationCheckVisitor implements Visitor {
     private AstNodeUtil astNodeUtil;
     private Stack<Map<String,Boolean>> variablesStatusStack = new Stack<>();
 
-    private boolean isLegal = true;
-    private List<String> errors = new ArrayList<>();
 
     public InitializationCheckVisitor(AstNodeUtil astNodeUtil) {
         this.astNodeUtil = astNodeUtil;
         variablesStatusStack.push(new HashMap<>());
     }
 
-    public boolean isLegal() {
-        return isLegal;
-    }
-
-    public String getErrors() {
-        String errors = "uninitialized local variables: ";
-        this.errors.forEach(error -> errors.concat(error + ","));
-        return errors;
+    public String createErrorMsg(String variable) {
+        return "Found uninitialized local variable: " + variable;
     }
 
 
     // region PRIVATE METHODS
 
-    private void setLegal(boolean legal) {
-        isLegal = legal;
-    }
-
-    private void addError(String variableName){
-        errors.add(variableName);
-    }
 
     private void updateVariablesStatusAfterBranch() {
         for (String variable : getMainVariableStatusMap().keySet()) {
@@ -116,8 +102,6 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
-
-//        boolean outerIf = this.branchStatuses.size() == 0;
 
         ifStatement.cond().accept(this);
 
@@ -221,8 +205,7 @@ public class InitializationCheckVisitor implements Visitor {
         var map = variablesStatusStack.peek();
         var id = e.id();
         if (!map.get(id)){
-            setLegal(false);
-            addError(id);
+            throw new InitializationException(createErrorMsg(id));
         }
     }
 

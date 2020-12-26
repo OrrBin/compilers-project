@@ -29,4 +29,13 @@ public class SymbolTablesManager {
         ast2SymbolicTable.put(astNode, symbolTable);
     }
 
+    public Program getProgram() throws Exception {
+        var programOptional = ast2SymbolicTable.entrySet().stream().filter(astNodeSymbolTableEntry -> astNodeSymbolTableEntry.getKey() instanceof Program).findFirst();
+        if(programOptional.isEmpty()) {
+            throw new Exception("No program scope in SymbolTablesManager found");
+        }
+
+        return (Program) programOptional.get().getValue().symbolTableScope;
+    }
+
 }

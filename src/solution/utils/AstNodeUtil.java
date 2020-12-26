@@ -377,5 +377,26 @@ public class AstNodeUtil {
         return classDecl;
     }
 
+    public boolean isSubClass(String superClassName, String extendingClassName) {
+        var classDeclarations = getClassDeclarations();
+        var superClassDeclOptional = classDeclarations.stream().filter(classDecl -> classDecl.name().equals(superClassName)).findFirst();
+        if(superClassDeclOptional.isEmpty())
+            throw new IllegalArgumentException("Could not find class named " + superClassName);
+
+        ClassDecl superClassDecl = superClassDeclOptional.get();
+        var extendingClasses = getExtendingClasses(superClassDecl);
+
+        return extendingClasses.stream().anyMatch(classDecl -> classDecl.name().equals(extendingClassName));
+    }
+
+    public List<ClassDecl> getClassDeclarations() {
+        Program program = null;
+        try {
+            program = symbolTablesManager.getProgram();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return program.classDecls();
+    }
 }
 

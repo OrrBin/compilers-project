@@ -16,8 +16,6 @@ TBD:
    (same number of arguments, same static type of arguments, a covariant static return type).
     Note that overloading is not supported.
 
-7. *won't be tested* The name this cannot be used for the name of a variable, field, formal parameter, or method.
-
 8. A type declaration of a reference type of A refers to classes that are defined somewhere in the file
    (either before or after the same class, or to the same class itself).
 
@@ -28,9 +26,6 @@ TBD:
     (i.e., not in a role of a method name in a call or a class name in new)
     is to a local variable or formal parameter defined in the current method,
     or to a field defined in the current class or its superclasses.
-
-19. *won't be tested* The argument of the main method (e.g. args in public static void main(String[] args))
-    is not referenced.
 
 
 
@@ -77,3 +72,11 @@ Done:
 
     24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
        or formal parameters.
+
+
+￿Won't be tested:
+
+7. *won't be tested* The name this cannot be used for the name of a variable, field, formal parameter, or method.
+
+19. *won't be tested* The argument of the main method (e.g. args in public static void main(String[] args))
+    is not referenced.

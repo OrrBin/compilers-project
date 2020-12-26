@@ -65,9 +65,6 @@ Done but not tested:
 
 23. In an assignment to an array x[e1] = e2, x is int[], e1 is an int and also e2 is an int.
 
-24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
-    or formal parameters.
-
 25. updated In an array allocation new int[e], e is an int.
 
 
@@ -75,5 +72,8 @@ Done:
    1.b. In particular, there are no cycles in the inheritance graph - i.e.,
     check to be sure that no class directly or indirectly extends itself.
 
-3. The same name cannot be used to name two classes.
+    3. The same name cannot be used to name two classes.
    (Including the class containing the main method.)
+
+    24. Variable redeclaration is forbidden - the same name cannot be used for declarations of two local variables
+       or formal parameters.

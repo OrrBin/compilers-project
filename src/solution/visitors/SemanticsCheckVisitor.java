@@ -1,6 +1,7 @@
 package solution.visitors;
 
 import ast.*;
+import solution.exceptions.SemanticException;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
@@ -96,19 +97,19 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(MethodDecl methodDecl) {
         List<String> localNames = methodDecl.vardecls().stream().map(VariableIntroduction::name).collect(Collectors.toList());
         if (hasDuplicates(localNames)){
-            throw new IllegalStateException("Found redeclaration of a local variable");
+            throw new SemanticException("Found redeclaration of a local variable");
         }
 
         List<String> formalNames = methodDecl.formals().stream().map(VariableIntroduction::name).collect(Collectors.toList());
         if (hasDuplicates(formalNames)){
-            throw new IllegalStateException("Found redeclaration of a formal variable");
+            throw new SemanticException("Found redeclaration of a formal variable");
         }
 
         List<String> localAndFormals = new ArrayList<>();
         localAndFormals.addAll(localNames);
         localAndFormals.addAll(formalNames);
         if (hasDuplicates(localAndFormals)){
-            throw new IllegalStateException("Found local and formal with the same name");
+            throw new SemanticException("Found local and formal with the same name");
         }
 
         // Check 18
@@ -117,17 +118,17 @@ public class SemanticsCheckVisitor implements Visitor {
         // If returned expression is not RefType check that it has the same type as method return type
         if (!(lastType instanceof RefType)) {
             if (!methodDecl.returnType().getClass().equals(lastType.getClass())) {
-                throw new IllegalStateException("Returned expression type and method return type are not the same");
+                throw new SemanticException("Returned expression type and method return type are not the same");
             }
         } else {
             // If returned expression is RefType , check that method return type is refType and of super class
             if (!(methodDecl.returnType() instanceof RefType)) {
-                throw new IllegalStateException("Returned expression type and method return type are not the same");
+                throw new SemanticException("Returned expression type and method return type are not the same");
             }
 
             RefType varType = (RefType) (methodDecl.returnType());
             if (!util.isSubClass(varType.id(), lastClassName)) {
-                throw new IllegalStateException("MethodDecl return expression type and method return type are refType but don't have the correct extending class. return expression type class: " + lastClassName + " , method return type: " + varType.id() );
+                throw new SemanticException("MethodDecl return expression type and method return type are refType but don't have the correct extending class. return expression type class: " + lastClassName + " , method return type: " + varType.id() );
             }
         }
 
@@ -153,7 +154,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(IfStatement ifStatement) {
         ifStatement.cond().accept(this);
         if (!(lastType instanceof BoolAstType)) {
-            throw new IllegalStateException("If condition expression is not of type boolean");
+            throw new SemanticException("If condition expression is not of type boolean");
         }
 
     }
@@ -162,7 +163,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(WhileStatement whileStatement) {
         whileStatement.cond().accept(this);
         if (!(lastType instanceof BoolAstType)) {
-            throw new IllegalStateException("While condition expression is not of type boolean");
+            throw new SemanticException("While condition expression is not of type boolean");
 
         }
     }
@@ -172,7 +173,7 @@ public class SemanticsCheckVisitor implements Visitor {
         sysoutStatement.arg().accept(this);
 
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Sysout arg is not of type int");
+            throw new SemanticException("Sysout arg is not of type int");
 
         }
     }
@@ -187,17 +188,17 @@ public class SemanticsCheckVisitor implements Visitor {
         // If last type is not refType check that that lv is of the same type
         if (!(lastType instanceof RefType)) {
             if (!lastType.getClass().equals(var.type().getClass())) {
-                throw new IllegalStateException("Assignment statement lv and rv are not of the same type");
+                throw new SemanticException("Assignment statement lv and rv are not of the same type");
             }
         } else {
             // If last type is RefType , check that lv is refType and of super class
             if (!(var.type() instanceof RefType)) {
-                throw new IllegalStateException("Assignment statement lv and rv are not of the same type");
+                throw new SemanticException("Assignment statement lv and rv are not of the same type");
             }
 
             RefType varType = (RefType) (var.type());
             if (!util.isSubClass(varType.id(), lastClassName)) {
-                throw new IllegalStateException("AssignStatement lv,rv are refType but don't have the correct extending class. rv class: " + lastClassName + " , lv: " + varType.id() );
+                throw new SemanticException("AssignStatement lv,rv are refType but don't have the correct extending class. rv class: " + lastClassName + " , lv: " + varType.id() );
             }
         }
     }
@@ -208,19 +209,19 @@ public class SemanticsCheckVisitor implements Visitor {
         // Check that lv is int[]
         VariableIntroduction var = (VariableIntroduction) util.getDeclFromName(SymbolKeyType.VAR, assignArrayStatement.lv(), assignArrayStatement);
         if (!(var.type() instanceof IntArrayAstType)) {
-            throw new IllegalStateException("Array Assignment statement lv is not of type IntArray");
+            throw new SemanticException("Array Assignment statement lv is not of type IntArray");
         }
 
         // Check that rv is int
         assignArrayStatement.rv().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Array Assignment statement rv is not of type IntArray");
+            throw new SemanticException("Array Assignment statement rv is not of type IntArray");
         }
 
         // Check that index is int
         assignArrayStatement.index().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Array Assignment statement index is not of type int");
+            throw new SemanticException("Array Assignment statement index is not of type int");
 
         }
     }
@@ -229,12 +230,12 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(AndExpr e) {
         e.e1().accept(this);
         if (!(lastType instanceof BoolAstType)) {
-            throw new IllegalStateException("And statement e1 is not of type boolean");
+            throw new SemanticException("And statement e1 is not of type boolean");
         }
 
         e.e2().accept(this);
         if (!(lastType instanceof BoolAstType)) {
-            throw new IllegalStateException("And statement e2 is not of type boolean");
+            throw new SemanticException("And statement e2 is not of type boolean");
         }
 
         lastType = new BoolAstType();
@@ -244,12 +245,12 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(LtExpr e) {
         e.e1().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Lt statement e1 is not of type int");
+            throw new SemanticException("Lt statement e1 is not of type int");
         }
 
         e.e2().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Lt statement e2 is not of type int");
+            throw new SemanticException("Lt statement e2 is not of type int");
         }
 
         lastType = new BoolAstType();
@@ -259,12 +260,12 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(AddExpr e) {
         e.e1().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Add statement e1 is not of type int");
+            throw new SemanticException("Add statement e1 is not of type int");
         }
 
         e.e2().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Add statement e2 is not of type int");
+            throw new SemanticException("Add statement e2 is not of type int");
         }
 
         lastType = new IntAstType();
@@ -274,12 +275,12 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(SubtractExpr e) {
         e.e1().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Subtract statement e1 is not of type int");
+            throw new SemanticException("Subtract statement e1 is not of type int");
         }
 
         e.e2().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Subtract statement e2 is not of type int");
+            throw new SemanticException("Subtract statement e2 is not of type int");
         }
 
         lastType = new IntAstType();
@@ -291,12 +292,12 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(MultExpr e) {
         e.e1().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Mult statement e1 is not of type int");
+            throw new SemanticException("Mult statement e1 is not of type int");
         }
 
         e.e2().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Mult statement e2 is not of type int");
+            throw new SemanticException("Mult statement e2 is not of type int");
         }
 
         lastType = new IntAstType();
@@ -307,13 +308,13 @@ public class SemanticsCheckVisitor implements Visitor {
         // Check that array expression is int[]
         e.arrayExpr().accept(this);
         if (!(lastType instanceof IntArrayAstType)) {
-            throw new IllegalStateException("ArrayAccessExpr array expression is not of type int[]");
+            throw new SemanticException("ArrayAccessExpr array expression is not of type int[]");
         }
 
         // Check that index is int
         e.indexExpr().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("ArrayAccessExpr index expression is not of type int");
+            throw new SemanticException("ArrayAccessExpr index expression is not of type int");
         }
 
         lastType = new IntAstType();
@@ -323,7 +324,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(ArrayLengthExpr e) {
         e.arrayExpr().accept(this);
         if (!(lastType instanceof IntArrayAstType)) {
-            throw new IllegalStateException("ArrayLengthExpr array expression is not of type int[]");
+            throw new SemanticException("ArrayLengthExpr array expression is not of type int[]");
         }
 
         lastType = new IntAstType();
@@ -337,13 +338,13 @@ public class SemanticsCheckVisitor implements Visitor {
                 !(e.ownerExpr() instanceof ThisExpr) &&
                 !(e.ownerExpr() instanceof IdentifierExpr)
         ) {
-            throw new IllegalStateException("MethodCallExpr owner expression is neither this, new or identifier expression, it is: " + e.ownerExpr().getClass());
+            throw new SemanticException("MethodCallExpr owner expression is neither this, new or identifier expression, it is: " + e.ownerExpr().getClass());
         }
 
         // Check 10: The static type of the object is reference type
         e.ownerExpr().accept(this);
         if (!(lastType instanceof RefType)) {
-            throw new IllegalStateException("MethodCallExpr owner expression is static type is not RefType, but it is: " + lastType.getClass());
+            throw new SemanticException("MethodCallExpr owner expression is static type is not RefType, but it is: " + lastType.getClass());
         }
 
         SymbolTable scope = util.getEnclosingScope(e);
@@ -352,13 +353,13 @@ public class SemanticsCheckVisitor implements Visitor {
         Optional<MethodDecl> declOptional = clazz.methoddecls().stream().filter(methodDecl -> methodDecl.name().equals(e.methodId())).findFirst();
         // Check 11.a: If no method with given name exist in the owner type, then there is an error
         if (declOptional.isEmpty()) {
-            throw new IllegalStateException("MethodCallExpr Could not find method with given name in owner type. owner type: " + clazz.name() + " , method name: " + e.methodId());
+            throw new SemanticException("MethodCallExpr Could not find method with given name in owner type. owner type: " + clazz.name() + " , method name: " + e.methodId());
         }
 
         MethodDecl methodDecl = declOptional.get();
         // Check 11.b: The methodDecl and method call has same number of parameters
         if (methodDecl.formals().size() != e.actuals().size()) {
-            throw new IllegalStateException("MethodCallExpr The methodDecl and method call doesn't have same number of parameters");
+            throw new SemanticException("MethodCallExpr The methodDecl and method call doesn't have same number of parameters");
         }
 
         // Check 11.c: each formalArg and actual have corresponding type
@@ -370,16 +371,16 @@ public class SemanticsCheckVisitor implements Visitor {
             actual.accept(this);
             if (!(lastType instanceof RefType)) {
                 if (!lastType.getClass().equals(paramType.getClass())) {
-                    throw new IllegalStateException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
                 }
             } else {
                 if (!(paramType instanceof RefType)) {
-                    throw new IllegalStateException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
                 }
 
                 RefType paramRefType = (RefType) paramType;
                 if (!util.isSubClass(paramRefType.id(), lastClassName)) {
-                    throw new IllegalStateException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id() );
                 }
             }
 
@@ -421,7 +422,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(NewIntArrayExpr e) {
         e.lengthExpr().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("NewIntArray length expression is not int, but: " + lastType.getClass());
+            throw new SemanticException("NewIntArray length expression is not int, but: " + lastType.getClass());
         }
 
         lastType = new IntArrayAstType();
@@ -437,7 +438,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(NotExpr e) {
         e.e().accept(this);
         if (!(lastType instanceof BoolAstType)) {
-            throw new IllegalStateException("Not statement e is not of type boolean");
+            throw new SemanticException("Not statement e is not of type boolean");
 
         }
 

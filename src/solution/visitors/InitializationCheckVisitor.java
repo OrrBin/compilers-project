@@ -197,7 +197,7 @@ public class InitializationCheckVisitor implements Visitor {
     public void visit(IdentifierExpr e) {
         var map = variablesStatusStack.peek();
         var id = e.id();
-        if (!map.get(id)){
+        if (map.containsKey(id) && !map.get(id)){
             throw new InitializationException(createErrorMsg(id));
         }
     }

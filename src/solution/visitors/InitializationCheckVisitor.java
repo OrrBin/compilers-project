@@ -14,7 +14,7 @@ public class InitializationCheckVisitor implements Visitor {
 
     public InitializationCheckVisitor(AstNodeUtil astNodeUtil) {
         this.astNodeUtil = astNodeUtil;
-        variablesStatusStack.push(new HashMap<>());
+
     }
 
     public String createErrorMsg(String variable) {
@@ -62,11 +62,12 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
+        variablesStatusStack.push(new HashMap<>());
         methodDecl.vardecls().forEach((var -> var.accept(this)));
         methodDecl.body().forEach((statement -> statement.accept(this)));
         methodDecl.ret().accept(this);
 
-        variablesStatusStack.pop();
+        variablesStatusStack.clear();
 
         // for debug
         if (!variablesStatusStack.empty()){

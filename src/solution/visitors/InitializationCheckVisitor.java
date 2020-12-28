@@ -62,12 +62,11 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
-        variablesStatusStack.push(new HashMap<>());
         methodDecl.vardecls().forEach((var -> var.accept(this)));
         methodDecl.body().forEach((statement -> statement.accept(this)));
         methodDecl.ret().accept(this);
 
-        variablesStatusStack.clear();
+        while (variablesStatusStack.size() > 1) variablesStatusStack.pop();
 
         // for debug
         if (!variablesStatusStack.empty()){

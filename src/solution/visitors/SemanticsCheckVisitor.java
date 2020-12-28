@@ -508,7 +508,9 @@ public class SemanticsCheckVisitor implements Visitor {
 
     @Override
     public void visit(ThisExpr e) {
-
+        lastType = new RefType();
+        SymbolTable t =  astNodeUtil.getEnclosingScope(e);
+        lastClassName = ((ClassDecl) t.parentSymbolTable.symbolTableScope).name();
     }
 
     @Override

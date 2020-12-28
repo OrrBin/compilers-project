@@ -400,7 +400,7 @@ public class AstNodeUtil {
 
         ClassDecl superClassDecl = superClassDeclOptional.get();
         var extendingClasses = getExtendingClasses(superClassDecl);
-
+        extendingClasses.add(superClassDecl);
         return extendingClasses.stream().anyMatch(classDecl -> classDecl.name().equals(extendingClassName));
     }
 

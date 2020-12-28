@@ -77,10 +77,23 @@ public class SemanticsCheckVisitor implements Visitor {
         // need2Check - #3 (no two classes with the same name)
         var classes = program.classDecls();
         for (var clazz : classes) {
-            if (progClasses.contains(clazz.name())) {
+            if (progClasses.contains(clazz.name()) || program.mainClass().name().equals(clazz.name())) {
                 throw new SemanticException("Found two classes with the same name.");
             }
             progClasses.add(clazz.name());
+
+            String superName = clazz.superName();
+            if (superName != null && !superName.isEmpty()) {
+                for (var classDecl : program.classDecls()) {
+                    if (classDecl.name().equals(clazz.name())) {
+                        throw new SemanticException("Found class extending class that is defined after it in the file");
+                    }
+
+                    if (classDecl.name().equals(superName)) {
+                        break;
+                    }
+                }
+            }
         }
 
         // visitor calls
@@ -160,6 +173,8 @@ public class SemanticsCheckVisitor implements Visitor {
             throw new SemanticException("Found local and formal with the same name");
         }
 
+        methodDecl.vardecls().forEach(varDecl -> varDecl.accept(this));
+        methodDecl.formals().forEach(formal -> formal.accept(this));
         methodDecl.body().forEach(statement -> statement.accept(this));
 
         // Check 18
@@ -182,18 +197,59 @@ public class SemanticsCheckVisitor implements Visitor {
             }
         }
 
+        ClassDecl superClassDecl = astNodeUtil.getSuperClassDeclarationOfMethod(methodDecl);
+        MethodDecl superMethodDecl = superClassDecl.methoddecls().stream().filter(m -> m.name().equals(methodDecl.name())).findFirst().get();
+
+        if(superMethodDecl.formals().size() != methodDecl.formals().size()) {
+            throw new SemanticException("MethodDecl formals does not match it's the method it overrides");
+        }
+
+
+        for(int i = 0; i < superMethodDecl.formals().size(); i++) {
+            var superFormal = superMethodDecl.formals().get(i);
+            var formal = methodDecl.formals().get(i);
+
+            var superType = superFormal.type();
+            if(!superType.getClass().equals(formal.type().getClass())) {
+                throw new SemanticException("MethodDecl formals does not match it's the method it overrides");
+            }
+            if(superType instanceof RefType) {
+               String superClassName = ((RefType)superType).id();
+               String className = ((RefType)formal.type()).id();
+                if(!superClassName.equals(className)) {
+                   throw new SemanticException("MethodDecl formals does not match it's the method it overrides");
+               }
+            }
+        }
 
     }
 
     @Override
     public void visit(FormalArg formalArg) {
+        formalArg.type().accept(this);
         lastType = formalArg.type();
+
+        if(lastType instanceof RefType) {
+            RefType type = (RefType) formalArg.type();
+            boolean doesClassExist = astNodeUtil.getClassDeclarations().stream().anyMatch(classDecl -> classDecl.name().equals(type.id()));
+            if(!doesClassExist) {
+                throw new SemanticException("Declaring varDecl of not existing class");
+            }
+        }
     }
 
     @Override
     public void visit(VarDecl varDecl) {
         varDecl.type().accept(this);
         lastType = varDecl.type();
+
+        if(lastType instanceof RefType) {
+            RefType type = (RefType) varDecl.type();
+            boolean doesClassExist = astNodeUtil.getClassDeclarations().stream().anyMatch(classDecl -> classDecl.name().equals(type.id()));
+            if(!doesClassExist) {
+                throw new SemanticException("Declaring varDecl of not existing class");
+            }
+        }
     }
 
     @Override
@@ -503,13 +559,16 @@ public class SemanticsCheckVisitor implements Visitor {
             }
             potVar = (VariableIntroduction) fields.get(e.id());
         }
+        AstType type = potVar.type();
         lastType = potVar.type();
+        lastClassName = type instanceof RefType ? lastClassName = ((RefType) type).id() : null;
+
     }
 
     @Override
     public void visit(ThisExpr e) {
         lastType = new RefType();
-        SymbolTable t =  astNodeUtil.getEnclosingScope(e);
+        SymbolTable t = astNodeUtil.getEnclosingScope(e);
         lastClassName = ((ClassDecl) t.parentSymbolTable.symbolTableScope).name();
     }
 

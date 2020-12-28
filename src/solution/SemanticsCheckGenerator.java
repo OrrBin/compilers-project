@@ -35,10 +35,8 @@ public class SemanticsCheckGenerator {
         }
         catch (InitializationException | SemanticException e){
             outputStream.write(ERROR.getBytes());
-//            System.out.println(ERROR);
             return;
         }
         outputStream.write(OK.getBytes());
-//        System.out.println(OK);
     }
 }

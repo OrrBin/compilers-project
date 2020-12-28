@@ -51,7 +51,6 @@ public class Main {
                         manager = activateSymbolTable(prog);
                     } catch (Exception e) {
                         os.write("ERROR\n".getBytes());
-//                        System.out.println("ERROR");
                         return;
                     }
 

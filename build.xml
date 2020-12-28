@@ -34,7 +34,7 @@
 
     <target name="dist" depends="compile"
             description="generate the distribution">
-        <jar jarfile="mjavac.jar" basedir="${build}">
+        <jar jarfile="ex3-tests-nadav/mjavac.jar" basedir="${build}">
             <manifest>
                 <attribute name="Main-Class" value="Main"/>
                 <attribute name="Class-Path" value="${tools}/java-cup-11b-runtime.jar ${tools}/java-cup-11b.jar ${tools}/jakarta.xml.bind-api-2.3.3.jar ${tools}/jaxb-impl-2.3.3.jar ${tools}/jakarta.activation-api-1.2.2.jar ${tools}/jaxb-jxc-2.3.3.jar"/>

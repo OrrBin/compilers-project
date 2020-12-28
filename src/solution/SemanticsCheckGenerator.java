@@ -17,8 +17,8 @@ public class SemanticsCheckGenerator {
 
     private Program program;
     private AstNodeUtil util;
-    private static final String OK = "OK";
-    private static final String ERROR = "ERROR";
+    private static final String OK = "OK\n";
+    private static final String ERROR = "ERROR\n";
 
     public SemanticsCheckGenerator(Program program, AstNodeUtil util) {
         this.program = program;
@@ -30,14 +30,15 @@ public class SemanticsCheckGenerator {
         InitializationCheckVisitor initializationCheckVisitor = new InitializationCheckVisitor(util);
         SemanticsCheckVisitor semanticsCheckVisitor = new SemanticsCheckVisitor(outputStream, util);
         try{
-            program.accept(initializationCheckVisitor);
             program.accept(semanticsCheckVisitor);
-
+            program.accept(initializationCheckVisitor);
         }
         catch (InitializationException | SemanticException e){
             outputStream.write(ERROR.getBytes());
+//            System.out.println(ERROR);
             return;
         }
         outputStream.write(OK.getBytes());
+//        System.out.println(OK);
     }
 }

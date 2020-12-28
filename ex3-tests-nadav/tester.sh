@@ -10,7 +10,7 @@ function run {
 
     java -jar $MJAVAC unmarshal semantic $INFILE $OUTFILE
 
-    echo -n "$1: "
+#    echo -n "$1: "
 
     if [[ "$2" = "valid" ]]; then
         EXPECTED=ok.txt
@@ -21,11 +21,12 @@ function run {
     DIFF=$(diff $OUTFILE $EXPECTED)
 
     if [[ $DIFF != "" ]]; then
+        echo -n "$1: "
         echo Failed
         echo "Expected: $(cat $EXPECTED)"
         echo "Received: $(cat $OUTFILE)"
-    else
-        echo Success
+#    else
+#        echo Success
     fi
 
     echo

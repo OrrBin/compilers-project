@@ -359,6 +359,9 @@ public class AstNodeUtil {
 
         while (!entries.containsKey(symbolKey)){
             symbolTableScope = symbolTableScope.parentSymbolTable;
+            if(symbolTableScope == null) {
+                return null;
+            }
             entries = symbolTableScope.entries;
         }
 

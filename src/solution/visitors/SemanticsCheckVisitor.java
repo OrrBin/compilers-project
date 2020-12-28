@@ -1,12 +1,46 @@
 package solution.visitors;
 
-import ast.*;
+import ast.AddExpr;
+import ast.AndExpr;
+import ast.ArrayAccessExpr;
+import ast.ArrayLengthExpr;
+import ast.AssignArrayStatement;
+import ast.AssignStatement;
+import ast.AstType;
+import ast.BlockStatement;
+import ast.BoolAstType;
+import ast.ClassDecl;
+import ast.FalseExpr;
+import ast.FormalArg;
+import ast.IdentifierExpr;
+import ast.IfStatement;
+import ast.IntArrayAstType;
+import ast.IntAstType;
+import ast.IntegerLiteralExpr;
+import ast.LtExpr;
+import ast.MainClass;
+import ast.MethodCallExpr;
+import ast.MethodDecl;
+import ast.MultExpr;
+import ast.NewIntArrayExpr;
+import ast.NewObjectExpr;
+import ast.NotExpr;
+import ast.Program;
+import ast.RefType;
+import ast.SubtractExpr;
+import ast.SysoutStatement;
+import ast.ThisExpr;
+import ast.TrueExpr;
+import ast.VarDecl;
+import ast.VariableIntroduction;
+import ast.Visitor;
+import ast.WhileStatement;
+import solution.exceptions.SemanticException;
+import solution.semantics_utils.SemanticsUtil;
 import solution.symbol_table.symbol_table_types.SymbolTable;
 import solution.symbol_table.symbol_types.SymbolKeyType;
 import solution.utils.AstNodeUtil;
-import solution.semantics_utils.*;
-import solution.exceptions.*;
-import java.io.IOException;
+
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,8 +76,8 @@ public class SemanticsCheckVisitor implements Visitor {
 
         // need2Check - #3 (no two classes with the same name)
         var classes = program.classDecls();
-        for(var clazz : classes){
-            if(progClasses.contains(clazz.name())) {
+        for (var clazz : classes) {
+            if (progClasses.contains(clazz.name())) {
                 throw new SemanticException("Found two classes with the same name.");
             }
             progClasses.add(clazz.name());
@@ -68,21 +102,21 @@ public class SemanticsCheckVisitor implements Visitor {
         // need2Check - #1#b (every class' parent exists)
         // need2Check - #2 (main class cannot be extended)
         var parentScope = astNodeUtil.getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
-        if((parentScope instanceof Program && classDecl.superName() != null)
-                || parentScope instanceof MainClass){
+        if ((parentScope instanceof Program && classDecl.superName() != null)
+                || parentScope instanceof MainClass) {
             throw new SemanticException("Main class is extended or a class' parent doesn't exist.");
         }
 
 
         // need2Check - #4 (no field override)
-        if(semanticsUtil.hasOverridingField(classDecl)){
+        if (semanticsUtil.hasOverridingField(classDecl)) {
             throw new SemanticException("Found field overriding in a class.");
         }
-        classDecl.fields().forEach(field-> field.accept(this));
+        classDecl.fields().forEach(field -> field.accept(this));
 
         // need2Check - #5 (no two methods with the same name in one class)
         // need2Check - #6 (in case of overriding, it is done correctly)
-        if(semanticsUtil.hasOverloadingMethod(classDecl)){
+        if (semanticsUtil.hasOverloadingMethod(classDecl)) {
             throw new SemanticException("Found OVERLOADING in a class.");
         }
         //TODO: unite the two code duplications
@@ -97,7 +131,7 @@ public class SemanticsCheckVisitor implements Visitor {
 //            name2TimesSet.add(method.name());
 //        }
 
-        classDecl.methoddecls().forEach(method-> method.accept(this));
+        classDecl.methoddecls().forEach(method -> method.accept(this));
 
     }
 
@@ -110,21 +144,23 @@ public class SemanticsCheckVisitor implements Visitor {
     @Override
     public void visit(MethodDecl methodDecl) {
         List<String> localNames = methodDecl.vardecls().stream().map(VariableIntroduction::name).collect(Collectors.toList());
-        if (hasDuplicates(localNames)){
+        if (hasDuplicates(localNames)) {
             throw new SemanticException("Found redeclaration of a local variable");
         }
 
         List<String> formalNames = methodDecl.formals().stream().map(VariableIntroduction::name).collect(Collectors.toList());
-        if (hasDuplicates(formalNames)){
+        if (hasDuplicates(formalNames)) {
             throw new SemanticException("Found redeclaration of a formal variable");
         }
 
         List<String> localAndFormals = new ArrayList<>();
         localAndFormals.addAll(localNames);
         localAndFormals.addAll(formalNames);
-        if (hasDuplicates(localAndFormals)){
+        if (hasDuplicates(localAndFormals)) {
             throw new SemanticException("Found local and formal with the same name");
         }
+
+        methodDecl.body().forEach(statement -> statement.accept(this));
 
         // Check 18
         methodDecl.ret().accept(this);
@@ -142,7 +178,7 @@ public class SemanticsCheckVisitor implements Visitor {
 
             RefType varType = (RefType) (methodDecl.returnType());
             if (!astNodeUtil.isSubClass(varType.id(), lastClassName)) {
-                throw new SemanticException("MethodDecl return expression type and method return type are refType but don't have the correct extending class. return expression type class: " + lastClassName + " , method return type: " + varType.id() );
+                throw new SemanticException("MethodDecl return expression type and method return type are refType but don't have the correct extending class. return expression type class: " + lastClassName + " , method return type: " + varType.id());
             }
         }
 
@@ -200,6 +236,9 @@ public class SemanticsCheckVisitor implements Visitor {
         // Check 16
         assignStatement.rv().accept(this);
         VariableIntroduction var = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, assignStatement.lv(), assignStatement);
+        if (var == null) {
+            throw new SemanticException("No declaration for var " + assignStatement.lv());
+        }
 
         // If last type is not refType check that that lv is of the same type
         if (!(lastType instanceof RefType)) {
@@ -214,7 +253,7 @@ public class SemanticsCheckVisitor implements Visitor {
 
             RefType varType = (RefType) (var.type());
             if (!astNodeUtil.isSubClass(varType.id(), lastClassName)) {
-                throw new SemanticException("AssignStatement lv,rv are refType but don't have the correct extending class. rv class: " + lastClassName + " , lv: " + varType.id() );
+                throw new SemanticException("AssignStatement lv,rv are refType but don't have the correct extending class. rv class: " + lastClassName + " , lv: " + varType.id());
             }
         }
     }
@@ -224,6 +263,9 @@ public class SemanticsCheckVisitor implements Visitor {
 
         // Check that lv is int[]
         VariableIntroduction var = (VariableIntroduction) astNodeUtil.getDeclFromName(SymbolKeyType.VAR, assignArrayStatement.lv(), assignArrayStatement);
+        if (var == null) {
+            throw new SemanticException("No declaration for var " + assignArrayStatement.lv());
+        }
         if (!(var.type() instanceof IntArrayAstType)) {
             throw new SemanticException("Array Assignment statement lv is not of type IntArray");
         }
@@ -281,7 +323,7 @@ public class SemanticsCheckVisitor implements Visitor {
 
         e.e2().accept(this);
         if (!(lastType instanceof IntAstType)) {
-            throw new IllegalStateException("Add statement e2 is not of type int");
+            throw new SemanticException("Add statement e2 is not of type int");
         }
 
         lastType = new IntAstType();
@@ -364,7 +406,7 @@ public class SemanticsCheckVisitor implements Visitor {
         SymbolTable scope = astNodeUtil.getEnclosingScope(e);
         ClassDecl clazz = (ClassDecl) scope.symbolTableScope;
 
-       Optional<MethodDecl> declOptional = semanticsUtil.getMethods(clazz).values().stream().filter(methodDecl -> methodDecl.name().equals(e.methodId())).findFirst();
+        Optional<MethodDecl> declOptional = semanticsUtil.getMethods(clazz).values().stream().filter(methodDecl -> methodDecl.name().equals(e.methodId())).findFirst();
         // Check 11.a: If no method with given name exist in the owner type, then there is an error
         if (declOptional.isEmpty()) {
             throw new SemanticException("MethodCallExpr Could not find method with given name in owner type. owner type: " + clazz.name() + " , method name: " + e.methodId());
@@ -385,16 +427,16 @@ public class SemanticsCheckVisitor implements Visitor {
             actual.accept(this);
             if (!(lastType instanceof RefType)) {
                 if (!lastType.getClass().equals(paramType.getClass())) {
-                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass());
                 }
             } else {
                 if (!(paramType instanceof RefType)) {
-                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter doesn't have the correct type. actual type: " + lastType.getClass() + " , paramType: " + paramType.getClass());
                 }
 
                 RefType paramRefType = (RefType) paramType;
                 if (!astNodeUtil.isSubClass(paramRefType.id(), lastClassName)) {
-                    throw new SemanticException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id() );
+                    throw new SemanticException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id());
                 }
             }
 
@@ -433,22 +475,26 @@ public class SemanticsCheckVisitor implements Visitor {
         var symbolTableScope = astNodeUtil.getEnclosingScope(e);
         var astScope = symbolTableScope.symbolTableScope;
 
+        if (!(astScope instanceof MethodDecl)) {
+            throw new SemanticException("Identifier is not a parameter, a local nor a field");
+        }
+
         //if astScope is a method
-        if (astScope instanceof MethodDecl) {
-            var entries = symbolTableScope.entries;
-            var keySet = entries.keySet();
-            for (var symbolKey : keySet) {
-                if (symbolKey.type != SymbolKeyType.VAR) {
-                    continue;
-                }
-                if (symbolKey.name.equals(e.id())) {
-                    isRefValid = true;
-                    potVar = (VariableIntroduction) entries.get(symbolKey).node;
-                }
+        var entries = symbolTableScope.entries;
+        var keySet = entries.keySet();
+        for (var symbolKey : keySet) {
+            if (symbolKey.type != SymbolKeyType.VAR) {
+                continue;
+            }
+            if (symbolKey.name.equals(e.id())) {
+                isRefValid = true;
+                potVar = (VariableIntroduction) entries.get(symbolKey).node;
             }
         }
-            if (!isRefValid) {
-                astScope = symbolTableScope.parentSymbolTable.symbolTableScope;
+
+
+        if (!isRefValid) {
+            astScope = symbolTableScope.parentSymbolTable.symbolTableScope;
 
             //if astScope is a class
             var fields = semanticsUtil.getFields((ClassDecl) astScope);
@@ -480,7 +526,7 @@ public class SemanticsCheckVisitor implements Visitor {
     public void visit(NewObjectExpr e) {
         // need2Check - #9 (Class for new Class() must be defined)
         var newClass = e.classId();
-        if(!progClasses.contains(newClass)){
+        if (!progClasses.contains(newClass)) {
             throw new SemanticException("New object class is not defined");
         }
         lastType = new RefType();
@@ -520,7 +566,7 @@ public class SemanticsCheckVisitor implements Visitor {
     @Override
     public void visit(RefType t) {
         lastType = new RefType();
-        if(!progClasses.contains(t.id())){
+        if (!progClasses.contains(t.id())) {
             throw new SemanticException("Ref type class is not defined");
         }
         lastClassName = t.id();

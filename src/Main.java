@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void main(String [] args) {
+    public static void main(String[] args) {
         try {
             var inputMethod = args[0];
             var action = args[1];
@@ -45,12 +45,19 @@ public class Main {
                 } else if (action.equals("semantic")) {
 
                     // initialize symbol tables
-                    SymbolTablesManager manager = activateSymbolTable(prog);
+                    OutputStream os = new FileOutputStream(outfilename);
+                    SymbolTablesManager manager = null;
+                    try {
+                        manager = activateSymbolTable(prog);
+                    } catch (Exception e) {
+                        os.write("ERROR\n".getBytes());
+//                        System.out.println("ERROR");
+                        return;
+                    }
 
                     AstNodeUtil util = new AstNodeUtil(manager);
                     SemanticsCheckGenerator generator = new SemanticsCheckGenerator(prog, util);
 
-                    OutputStream os = new FileOutputStream(outfilename);
                     generator.generate(os);
 
 
@@ -116,8 +123,8 @@ public class Main {
         return manager;
     }
 
-    public static void testMain(String [] args){
-        String [] secMainArgs = new String[4];
+    public static void testMain(String[] args) {
+        String[] secMainArgs = new String[4];
         List<Pair<String, String>> simpleTests = new ArrayList<>();
 
         var Simple = "1_vars/Simple.xml";
@@ -144,7 +151,7 @@ public class Main {
         secMainArgs[0] = "unmarshal";
         secMainArgs[1] = "compile";
 
-        for(var item : simpleTests){
+        for (var item : simpleTests) {
             secMainArgs[2] = fileNamePrefix + item.fst;
             secMainArgs[3] = outFileNamePrefix + item.snd + ".ll";
 

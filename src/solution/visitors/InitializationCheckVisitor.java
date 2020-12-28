@@ -14,7 +14,6 @@ public class InitializationCheckVisitor implements Visitor {
 
     public InitializationCheckVisitor(AstNodeUtil astNodeUtil) {
         this.astNodeUtil = astNodeUtil;
-
     }
 
     public String createErrorMsg(String variable) {
@@ -45,33 +44,29 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(Program program) {
-        program.mainClass().accept(this);
+        // program.mainClass().accept(this);
         program.classDecls().forEach(clazz -> clazz.accept(this));
     }
 
     @Override
     public void visit(ClassDecl classDecl) {
-        classDecl.fields().forEach(field -> field.accept(this));
+        // classDecl.fields().forEach(field -> field.accept(this));  fields are always initialized
         classDecl.methoddecls().forEach(method -> method.accept(this));
+        variablesStatusStack.clear();
     }
 
     @Override
     public void visit(MainClass mainClass) {
-        mainClass.mainStatement().accept(this);
+        // mainClass.mainStatement().accept(this);
     }
 
     @Override
     public void visit(MethodDecl methodDecl) {
+        variablesStatusStack.push(new HashMap<>());
         methodDecl.vardecls().forEach((var -> var.accept(this)));
         methodDecl.body().forEach((statement -> statement.accept(this)));
         methodDecl.ret().accept(this);
-
-        while (variablesStatusStack.size() > 1) variablesStatusStack.pop();
-
-        // for debug
-        if (!variablesStatusStack.empty()){
-            throw new RuntimeException("variables status stack should be empty - contact Oz");
-        }
+        variablesStatusStack.pop();
     }
 
     @Override
@@ -86,10 +81,8 @@ public class InitializationCheckVisitor implements Visitor {
     @Override
     public void visit(VarDecl varDecl) {
         // in MiniJava can't initialize variable in declaration
-        if (astNodeUtil.isField(varDecl)){
+        if (!astNodeUtil.isField(varDecl)){
             // field is always initialized
-            variablesStatusStack.peek().put(varDecl.name(), true);
-        } else {
             // local variable is never initialized in declaration
             variablesStatusStack.peek().put(varDecl.name(), false);
         }

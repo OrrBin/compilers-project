@@ -19,7 +19,6 @@ public class SemanticsCheckVisitor implements Visitor {
 
     private OutputStream outputStream;
     private AstNodeUtil astNodeUtil;
-    private boolean isOk = true;
     private AstType lastType = new IntAstType();
     private Set<String> progClasses = new HashSet<>();
     String lastClassName = null;
@@ -37,17 +36,6 @@ public class SemanticsCheckVisitor implements Visitor {
         semanticsUtil = new SemanticsUtil(astNodeUtil);
     }
 
-    private void write2File() {
-        try {
-            if (isOk) {
-                outputStream.write(OK.getBytes());
-            } else {
-                outputStream.write(ERROR.getBytes());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void visit(Program program) {
@@ -56,9 +44,7 @@ public class SemanticsCheckVisitor implements Visitor {
         var classes = program.classDecls();
         for(var clazz : classes){
             if(progClasses.contains(clazz.name())) {
-                isOk = false;
-                write2File();
-                return;
+                throw new SemanticException("Found two classes with the same name.");
             }
             progClasses.add(clazz.name());
         }
@@ -68,11 +54,7 @@ public class SemanticsCheckVisitor implements Visitor {
 
         for (var classDecl : classes) {
             classDecl.accept(this);
-            if (!isOk) {
-                return;
-            }
         }
-        write2File();
 
     }
 
@@ -81,18 +63,14 @@ public class SemanticsCheckVisitor implements Visitor {
         // need2Check - #1#a (a class doesn't inherit itself)
         var classHierarchy = semanticsUtil.checkAndGetClassHierarchy(classDecl);
         if (classHierarchy == null) {
-            isOk = false;
-            write2File();
-            return;
+            throw new SemanticException("A class is its own grandpa.");
         }
         // need2Check - #1#b (every class' parent exists)
         // need2Check - #2 (main class cannot be extended)
         var parentScope = astNodeUtil.getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
         if((parentScope instanceof Program && classDecl.superName() != null)
                 || parentScope instanceof MainClass){
-            isOk = false;
-            write2File();
-            return;
+            throw new SemanticException("Main class is extended or a class' parent doesn't exist.");
         }
 
 
@@ -386,7 +364,7 @@ public class SemanticsCheckVisitor implements Visitor {
         SymbolTable scope = astNodeUtil.getEnclosingScope(e);
         ClassDecl clazz = (ClassDecl) scope.symbolTableScope;
 
-        Optional<MethodDecl> declOptional = clazz.methoddecls().stream().filter(methodDecl -> methodDecl.name().equals(e.methodId())).findFirst();
+       Optional<MethodDecl> declOptional = semanticsUtil.getMethods(clazz).values().stream().filter(methodDecl -> methodDecl.name().equals(e.methodId())).findFirst();
         // Check 11.a: If no method with given name exist in the owner type, then there is an error
         if (declOptional.isEmpty()) {
             throw new SemanticException("MethodCallExpr Could not find method with given name in owner type. owner type: " + clazz.name() + " , method name: " + e.methodId());
@@ -505,6 +483,7 @@ public class SemanticsCheckVisitor implements Visitor {
         if(!progClasses.contains(newClass)){
             throw new SemanticException("New object class is not defined");
         }
+        lastType = new RefType();
         lastClassName = newClass;
     }
 

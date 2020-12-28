@@ -20,8 +20,6 @@ class C extends A {
     }
 }
 
-class D extends C {}
-
 class E {
     public int anotherMethod() {
         return new B().theMethod() + new D().theMethod();

@@ -121,6 +121,7 @@ public class SemanticsUtil {
             }
         return false;
     }
+
     public Map<String, VarDecl> getFields(ClassDecl classDecl){
         Map<String, VarDecl> fields = new HashMap<>();
         Stack<ClassDecl> ancestorClassPath = astNodeUtil.getAncestorStack(classDecl);
@@ -133,6 +134,20 @@ public class SemanticsUtil {
             }
         }
         return fields;
+    }
+
+    public Map<String, MethodDecl> getMethods(ClassDecl classDecl){
+        Map<String, MethodDecl> methods = new HashMap<>();
+        Stack<ClassDecl> ancestorClassPath = astNodeUtil.getAncestorStack(classDecl);
+        ClassDecl curClass;
+        while (!ancestorClassPath.empty()) {
+            curClass = ancestorClassPath.pop();
+            var curMethods = curClass.methoddecls();
+            for (var method : curMethods) {
+                methods.put(method.name(), method);
+            }
+        }
+        return methods;
     }
 
 }

@@ -1,6 +1,7 @@
 package solution.utils;
 
 import ast.*;
+import solution.RenameOpParams;
 import solution.SymbolTablesManager;
 import solution.VariableType;
 import solution.symbol_table.symbol_table_types.SymbolTable;
@@ -99,13 +100,12 @@ public class AstNodeUtil {
         return extendingClasses;
     }
 
-    //isMethod == true if we wan tot get methods by heir order
-    //isMethod == false if we wan tot get fields by heir order
-    private Map<Integer, String> getByHeirOrder(ClassDecl classDecl, boolean isMethodCalling) {
-        Map<Integer, String> Order2Names = new HashMap<>();
+    //isMethod == true if we want to get methods by heir order
+    //isMethod == false if we want to get fields by heir order
+
+    public Stack<ClassDecl> getAncestorStack(ClassDecl classDecl) {
         Stack<ClassDecl> ancestorClassPath = new Stack<>();
         ancestorClassPath.push(classDecl);
-
         ClassDecl curClass;
         var parentClass = getEnclosingScope(classDecl).parentSymbolTable.symbolTableScope;
 
@@ -117,6 +117,13 @@ public class AstNodeUtil {
             ancestorClassPath.push(curClass);
             parentClass = getEnclosingScope(curClass).parentSymbolTable.symbolTableScope;
         }
+        return ancestorClassPath;
+    }
+
+    public Map<Integer, String> getByHeirOrder(ClassDecl classDecl, boolean isMethodCalling) {
+        Map<Integer, String> Order2Names = new HashMap<>();
+        Stack<ClassDecl> ancestorClassPath =  getAncestorStack(classDecl);
+        ClassDecl curClass;
         //now curClass is the first super class
         //descending the path and collecting methods
 
@@ -261,16 +268,19 @@ public class AstNodeUtil {
 
     // region findByLineNum
 
-    boolean nodeFoundByLineNum(AstNode nodeToCheck, int lineNumber, boolean isMethod) {
+    boolean nodeFoundByLineNum(MethodDecl nodeToCheck, int lineNumber, String name) {
         var nodeLineNum = nodeToCheck.lineNumber;
-        boolean nodeTypeVerified = (isMethod && nodeToCheck instanceof MethodDecl)  || (!isMethod && !(nodeToCheck instanceof MethodDecl));
-        return (nodeLineNum != null) && (nodeLineNum == lineNumber) && nodeTypeVerified;
+        return (nodeLineNum != null) && (nodeLineNum == lineNumber) && nodeToCheck.name().equals(name);
+    }
+    boolean nodeFoundByLineNum(VariableIntroduction nodeToCheck, int lineNumber, String name) {
+        var nodeLineNum = nodeToCheck.lineNumber;
+        return (nodeLineNum != null) && (nodeLineNum == lineNumber) && nodeToCheck.name().equals(name);
     }
 
     //if retVal == null then program input is incorrect
-    public AstNode findByLineNumber(Program program, int lineNumber, boolean isMethod) {
+    public AstNode findByLineNumber(Program program, RenameOpParams op, boolean isMethod) {
         List<ClassDecl> classes = program.classDecls();
-
+        int lineNumber = op.originalLine;
         //go over all program classes' symbol tables
         for (var c : classes) {
 
@@ -283,10 +293,16 @@ public class AstNodeUtil {
                 AstNode cSymbolNode = cSymTableEntries.get(symbol).node;
 
                 //check for field or method
-                if (nodeFoundByLineNum(cSymbolNode, lineNumber, isMethod)) {
-                    return cSymbolNode;
+                if(cSymbolNode instanceof MethodDecl && isMethod){
+                    if (nodeFoundByLineNum((MethodDecl) cSymbolNode, lineNumber, op.originalName)) {
+                        return cSymbolNode;
+                    }
                 }
-
+                else if(cSymbolNode instanceof VariableIntroduction && !isMethod){
+                    if (nodeFoundByLineNum((VariableIntroduction) cSymbolNode, lineNumber, op.originalName)) {
+                        return cSymbolNode;
+                    }
+                }
                 //check for formal arg/ local inside a method
                 else if (cSymbolNode.getClass() == MethodDecl.class) {
 
@@ -297,9 +313,9 @@ public class AstNodeUtil {
                     //go over all symbols in method symbol table
                     for (var symbolInMethod : mSymbolsKeySet) {
                         AstNode mSymbolNode = mSymTableEntries.get(symbolInMethod).node;
-                        if (nodeFoundByLineNum(mSymbolNode, lineNumber, isMethod)) {
-                            return mSymbolNode;
-                        }
+                        if(mSymbolNode instanceof VariableIntroduction)
+                            if (nodeFoundByLineNum((VariableIntroduction) mSymbolNode, lineNumber, op.originalName)) {
+                                return mSymbolNode;}
                     }
                 }
 
@@ -323,18 +339,14 @@ public class AstNodeUtil {
         ClassDecl classDecl = getClassDeclaration(astNode);
         SymbolTable symbolTable = getEnclosingScope(classDecl);
         AstNode scope = symbolTable.symbolTableScope;
-        ClassDecl clazz;
-        do {
-            clazz = (ClassDecl) scope;
+
+        while (scope instanceof ClassDecl ) {
+            ClassDecl clazz = (ClassDecl) scope;
             hierarchy.add(clazz);
             symbolTable = symbolTable.parentSymbolTable;
             scope = symbolTable.symbolTableScope;
-        }  while (scope instanceof ClassDecl  && (hierarchy.size() >1 && !clazz.name().equals(classDecl.name())));
-
-        //a class inherit itself
-        if( hierarchy.size() > 1 && clazz.name().equals(classDecl.name())){
-            return null;
         }
+
         Collections.reverse(hierarchy);
         return hierarchy;
     }

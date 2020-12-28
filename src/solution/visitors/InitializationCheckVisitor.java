@@ -25,9 +25,9 @@ public class InitializationCheckVisitor implements Visitor {
 
 
     private void updateVariablesStatusAfterBranch() {
+        var map1 = variablesStatusStack.pop();
+        var map2 = variablesStatusStack.pop();
         for (String variable : getMainVariableStatusMap().keySet()) {
-            var map1 = variablesStatusStack.pop();
-            var map2 = variablesStatusStack.pop();
             if (map1.get(variable) && map2.get(variable)) {
                 variablesStatusStack.peek().put(variable, true);
             }

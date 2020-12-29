@@ -20,9 +20,7 @@ public class InitializationCheckVisitor implements Visitor {
         return "Found uninitialized local variable: " + variable;
     }
 
-
     // region PRIVATE METHODS
-
 
     private void updateVariablesStatusAfterBranch() {
         var map1 = variablesStatusStack.pop();
@@ -34,10 +32,8 @@ public class InitializationCheckVisitor implements Visitor {
         }
     }
 
-    private Map<String,Boolean> cloneVariableStatusMap() {
-        Map<String,Boolean> newMap = new HashMap<>();
-        newMap.putAll(getMainVariableStatusMap());
-        return newMap;
+    private HashMap<String, Boolean> cloneLastVariableStatusMap() {
+        return new HashMap<>(variablesStatusStack.peek());
     }
 
     // endregion
@@ -97,11 +93,13 @@ public class InitializationCheckVisitor implements Visitor {
     public void visit(IfStatement ifStatement) {
 
         ifStatement.cond().accept(this);
+        var statusMap1 = cloneLastVariableStatusMap();
+        var statusMap2 = cloneLastVariableStatusMap();
 
-        variablesStatusStack.push(cloneVariableStatusMap());
+        variablesStatusStack.push(statusMap1);
         ifStatement.thencase().accept(this);
 
-        variablesStatusStack.push(cloneVariableStatusMap());
+        variablesStatusStack.push(statusMap2);
         ifStatement.elsecase().accept(this);
 
         updateVariablesStatusAfterBranch();
@@ -110,10 +108,10 @@ public class InitializationCheckVisitor implements Visitor {
     @Override
     public void visit(WhileStatement whileStatement) {
         whileStatement.cond().accept(this);
-//        Map<String, Boolean> clone = new HashMap<>(variablesStatusStack.peek());
-//        variablesStatusStack.push(clone);
+        Map<String, Boolean> clone = cloneLastVariableStatusMap();
+        variablesStatusStack.push(clone);
         whileStatement.body().accept(this);
-//        variablesStatusStack.pop();
+        variablesStatusStack.pop();
     }
 
     @Override

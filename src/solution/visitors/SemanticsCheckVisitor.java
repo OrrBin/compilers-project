@@ -291,8 +291,8 @@ public class SemanticsCheckVisitor implements Visitor {
         whileStatement.cond().accept(this);
         if (!(lastType instanceof BoolAstType)) {
             throw new SemanticException("While condition expression is not of type boolean");
-
         }
+        whileStatement.body().accept(this);
     }
 
     @Override
@@ -515,12 +515,9 @@ public class SemanticsCheckVisitor implements Visitor {
                     throw new SemanticException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id());
                 }
             }
-
-            lastType = methodDecl.returnType();
-            lastClassName = lastType instanceof RefType ? ((RefType) lastType).id() : null;
         }
-
         lastType = methodDecl.returnType();
+        lastClassName = lastType instanceof RefType ? ((RefType) lastType).id() : null;
     }
 
     @Override

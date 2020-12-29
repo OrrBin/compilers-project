@@ -60,6 +60,22 @@ public class AstNodeUtil {
         return last;
     }
 
+    public ClassDecl getFirstClassDeclarationOfMethod(MethodDecl methodDecl) {
+        ClassDecl classDecl = getClassDeclaration(methodDecl);
+        SymbolTable symbolTable = getEnclosingScope(classDecl);
+        AstNode scope = symbolTable.parentSymbolTable.symbolTableScope;
+
+        while (scope instanceof ClassDecl) {
+            ClassDecl scopeClass = (ClassDecl) scope;
+            if (hasMethod(scopeClass, methodDecl)) {
+                return scopeClass;
+            }
+            symbolTable = symbolTable.parentSymbolTable;
+            scope = symbolTable.symbolTableScope;
+        }
+        return null;
+    }
+
     /** return all classes which inhering @method.
      *  explicitly: find the super class which declare the method and return all classes which
      *             inheriting him **/
@@ -395,8 +411,9 @@ public class AstNodeUtil {
     public boolean isSubClass(String superClassName, String extendingClassName) {
         var classDeclarations = getClassDeclarations();
         var superClassDeclOptional = classDeclarations.stream().filter(classDecl -> classDecl.name().equals(superClassName)).findFirst();
-        if(superClassDeclOptional.isEmpty())
+        if(superClassDeclOptional.isEmpty()) {
             throw new IllegalArgumentException("Could not find class named " + superClassName);
+        }
 
         ClassDecl superClassDecl = superClassDeclOptional.get();
         var extendingClasses = getExtendingClasses(superClassDecl);

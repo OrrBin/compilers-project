@@ -34,6 +34,7 @@ public class SemanticsCheckGenerator {
             program.accept(initializationCheckVisitor);
         }
         catch (InitializationException | SemanticException e){
+//            e.printStackTrace();
             outputStream.write(ERROR.getBytes());
             return;
         }

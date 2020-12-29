@@ -192,12 +192,17 @@ public class SemanticsCheckVisitor implements Visitor {
             }
 
             RefType varType = (RefType) (methodDecl.returnType());
-            if (!astNodeUtil.isSubClass(varType.id(), lastClassName)) {
+            if (!isSubClass(varType.id(), lastClassName)) {
                 throw new SemanticException("MethodDecl return expression type and method return type are refType but don't have the correct extending class. return expression type class: " + lastClassName + " , method return type: " + varType.id());
             }
         }
 
-        ClassDecl superClassDecl = astNodeUtil.getSuperClassDeclarationOfMethod(methodDecl);
+        // Check that formals has the correct type if overriding method
+        ClassDecl superClassDecl = astNodeUtil.getFirstClassDeclarationOfMethod(methodDecl);
+        if(superClassDecl == null) {
+            return;
+        }
+
         MethodDecl superMethodDecl = superClassDecl.methoddecls().stream().filter(m -> m.name().equals(methodDecl.name())).findFirst().get();
 
         if(superMethodDecl.formals().size() != methodDecl.formals().size()) {
@@ -221,6 +226,21 @@ public class SemanticsCheckVisitor implements Visitor {
                }
             }
         }
+
+        // Check that return type has the correct type if overriding method
+        if(!superMethodDecl.returnType().getClass().equals(methodDecl.returnType().getClass())) {
+            throw new SemanticException("MethodDecl return type does not match it's the method it overrides");
+        }
+        var superReturnType = superMethodDecl.returnType();
+
+        if(superReturnType instanceof RefType) {
+            String superClassName = ((RefType)superReturnType).id();
+            String className = ((RefType)methodDecl.returnType()).id();
+            if(!isSubClass(superClassName, className)) {
+                throw new SemanticException("MethodDecl return type does not match it's the method it overrides");
+            }
+        }
+
 
     }
 
@@ -308,7 +328,7 @@ public class SemanticsCheckVisitor implements Visitor {
             }
 
             RefType varType = (RefType) (var.type());
-            if (!astNodeUtil.isSubClass(varType.id(), lastClassName)) {
+            if (!isSubClass(varType.id(), lastClassName)) {
                 throw new SemanticException("AssignStatement lv,rv are refType but don't have the correct extending class. rv class: " + lastClassName + " , lv: " + varType.id());
             }
         }
@@ -491,7 +511,7 @@ public class SemanticsCheckVisitor implements Visitor {
                 }
 
                 RefType paramRefType = (RefType) paramType;
-                if (!astNodeUtil.isSubClass(paramRefType.id(), lastClassName)) {
+                if (!isSubClass(paramRefType.id(), lastClassName)) {
                     throw new SemanticException("MethodCallExpr The " + i + "th parameter is reftype but doesn't have the correct extending class. actual class: " + lastClassName + " , param class: " + paramRefType.id());
                 }
             }
@@ -640,6 +660,15 @@ public class SemanticsCheckVisitor implements Visitor {
         return namesSet.size() != names.size();
     }
 
-    //endregion
+    boolean isSubClass(String superClassName, String extendingClassName) {
+        try {
+            return astNodeUtil.isSubClass(superClassName, extendingClassName);
+        } catch (IllegalArgumentException e) {
+            throw new SemanticException("Super class does not exist");
+        }
+
+    }
+
+        //endregion
 
 }

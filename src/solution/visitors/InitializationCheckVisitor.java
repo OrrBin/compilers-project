@@ -109,7 +109,11 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(WhileStatement whileStatement) {
-        // no need to implement
+        whileStatement.cond().accept(this);
+//        Map<String, Boolean> clone = new HashMap<>(variablesStatusStack.peek());
+//        variablesStatusStack.push(clone);
+        whileStatement.body().accept(this);
+//        variablesStatusStack.pop();
     }
 
     @Override
@@ -126,9 +130,12 @@ public class InitializationCheckVisitor implements Visitor {
 
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
-        var map = variablesStatusStack.peek();
+        var map  = variablesStatusStack.peek();
+        if (map.containsKey(assignArrayStatement.lv()) && !map.get(assignArrayStatement.lv())) {
+            throw new InitializationException(createErrorMsg(assignArrayStatement.lv()));
+        }
+        assignArrayStatement.index().accept(this);
         assignArrayStatement.rv().accept(this);
-        map.put(assignArrayStatement.lv(), true);
     }
 
     @Override

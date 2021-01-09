@@ -6,7 +6,6 @@ import solution.*;
 import solution.symbol_table.SymbolTableInitVisitor;
 import solution.symbol_table.SymbolTablePreInitVisitor;
 import solution.utils.AstNodeUtil;
-import solution.visitors.SemanticsCheckVisitor;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -23,7 +22,10 @@ public class Main {
             Program prog;
 
             if (inputMethod.equals("parse")) {
-                throw new UnsupportedOperationException("TODO - Ex. 4");
+                FileReader fileReader = new FileReader(filename);
+                Parser parser = new Parser(new Lexer(fileReader));
+                prog = (Program) parser.parse().value;
+
             } else if (inputMethod.equals("unmarshal")) {
                 AstXMLSerializer xmlSerializer = new AstXMLSerializer();
                 prog = xmlSerializer.deserialize(new File(filename));

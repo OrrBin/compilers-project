@@ -1,4 +1,9 @@
 /*************/
+/* Based on a template by Oren Ish-Shalom */
+/*************/
+
+
+/*************/
 /* IMPORTS */
 /*************/
 
@@ -16,15 +21,11 @@ parser code
 		super(lexer);
 		this.lexer = lexer;
 	}
+
+	// Override default error reporting in parser
 	public void report_error(String message, Object info)
 	{
-    System.out.print("Syntax error at line " + lexer.getLine() + " of input\n");
-		// System.out.print("ERROR >> ");
-		// System.out.print("[");
-		// System.out.print(lexer.getLine());
-		// System.out.print(":");
-		// System.out.print(lexer.getCharPos());
-		// System.out.print("] ");
+	    System.err.print("Syntax error at line " + lexer.getLine() + " of input. Parser\n");
 		System.exit(1);
 	}
 :}
@@ -35,45 +36,216 @@ parser code
 scan with
 {:
 	Symbol s;
+    try {
 	s = lexer.next_token();
-	// System.out.print(s.sym);
-	// System.out.print("[");
-	// System.out.print(lexer.getLine());
-	// System.out.print(":");
-	// System.out.print(lexer.getCharPos());
-	// System.out.print("] ");
-	// System.out.print(sym.terminalNames[s.sym]);
-	// if (s.value != null)
-	// {
-	//	System.out.print("( ");
-	//	System.out.print(s.value);
-	//	System.out.print(" )");
-	// }
-	// System.out.print("\n");
+//	System.out.print(s.sym);
+//	System.out.print("[");
+//	System.out.print(lexer.getLine());
+//	System.out.print(":");
+//	System.out.print(lexer.getCharPos());
+//	System.out.print("] ");
+//	System.out.print(sym.terminalNames[s.sym]);
+//	if (s != null)
+//	{
+//	    System.out.print("( ");
+//	    System.out.print(s);
+//		System.out.print(" )");
+//	}
+//	System.out.print("\n");
 	return s;
+     } catch (java.lang.Error e) {
+         System.err.print("Syntax error at line " + lexer.getLine() + " of input. Lexer\n");
+         System.exit(1);
+         return null;
+     }
 :};
 
 /*************/
 /* TERMINALS */
 /*************/
-terminal PUBLIC;
+terminal PUBLIC, MAIN, NEW, CLASS, RETURN, EXTENDS, THIS, LENGTH, STATIC, VOID, SYSOUT;
+terminal BOOLEAN, INT, STRING;
+terminal TRUE, FALSE;
+terminal int NUMBER;
+terminal IF, ELSE, WHILE;
+terminal LPAREN, RPAREN, LSQRBRACKET, RSQRBRACKET, LBRACE, RBRACE;
+terminal COMMA, DOT, SEMICOLON, NOT, ASSIGNMENT;
+terminal ADD, SUB, MULT, LT, AND;
+terminal String ID;
 
 /*****************/
 /* NON TERMINALS */
 /*****************/
-non terminal prog;
+non terminal Program program;
+non terminal MainClass mainClass;
+non terminal LinkedList<ClassDecl> classDeclarations;
+non terminal Statement statement;
+non terminal Expr expression;
+non terminal LinkedList<Statement> statements;
+non terminal ClassDecl classDecl;
+non terminal LinkedList<VarDecl> varDeclarations;
+non terminal LinkedList<MethodDecl> methodDeclarations;
+non terminal VarDecl varDecl;
+non terminal MethodDecl methodDecl;
+non terminal AstType astType;
+non terminal FormalArg formal;
+non terminal LinkedList<FormalArg> formals;
+non terminal LinkedList<Expr> actuals;
 
 /***********************/
 /* OPERATOR PRECEDENCE */
 /***********************/
+precedence nonassoc ASSIGNMENT;
+precedence left AND;
+precedence left LT;
+precedence left ADD, SUB;
+precedence left MULT;
+precedence right NOT;
+precedence left DOT;
+precedence right NEW;
+// TODO UMINUS
 
 /************************/
 /* INITIAL NON TERMINAL */
 /************************/
-start with prog;
+start with program;
 
 /********************/
 /* PRODUCTION RULES */
 /********************/
 
-prog            ::=     ;
+program            ::= mainClass:m classDeclarations:cs
+                    {: RESULT = new Program(m, cs); :}
+;
+
+                //  public static void main(String[] args) { ... }
+mainClass       ::= CLASS ID:name LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LSQRBRACKET RSQRBRACKET ID:args RPAREN LBRACE statement:s RBRACE RBRACE
+                    {: RESULT = new MainClass(name, args, s); :}
+;
+
+
+classDeclarations   ::= classDecl:c classDeclarations:cs
+                    {: cs.addFirst(c); RESULT = cs; :}
+                |   {: RESULT = new LinkedList<ClassDecl>(); :}
+;
+
+
+                // class B extends A { ... }
+classDecl       ::= CLASS ID:name LBRACE varDeclarations:fields methodDeclarations:methoddecls RBRACE
+                    {: RESULT = new ClassDecl(name, null, fields, methoddecls); :}
+                |   CLASS ID:name EXTENDS ID:superClass LBRACE varDeclarations:fields methodDeclarations:methoddecls RBRACE
+                    {: RESULT = new ClassDecl(name, superClass, fields, methoddecls); :}
+;
+
+varDeclarations     ::= varDeclarations:vs varDecl:v
+                    {: vs.add(v); RESULT = vs; :}
+                |   {:RESULT = new LinkedList<VarDecl>(); :}
+;
+                
+                
+                // int x;
+varDecl         ::= astType:type ID:name SEMICOLON
+                    {: RESULT = new VarDecl(type, name, lexer.getLine()); :}
+;
+
+methodDeclarations  ::= methodDecl:m methodDeclarations:ms
+                    {: ms.addFirst(m); RESULT = ms; :}
+                |   {:RESULT = new LinkedList<MethodDecl>(); :}
+;
+
+
+                // public int theThing(...) { ...    return ...}
+methodDecl      ::= PUBLIC astType:retType ID:name LPAREN RPAREN LBRACE varDeclarations:vs statements:ss RETURN expression:ret SEMICOLON RBRACE
+                    {: RESULT = new MethodDecl(retType, name, new LinkedList<FormalArg>(), vs, ss, ret, lexer.getLine()); :}
+                |   PUBLIC astType:retType ID:name LPAREN formal:first formals:fs RPAREN LBRACE varDeclarations:vs statements:ss RETURN expression:ret SEMICOLON RBRACE
+                                     {: fs.addFirst(first); RESULT = new MethodDecl(retType, name, fs, vs, ss, ret, lexer.getLine()); :}
+                // TODO try remove first
+;
+
+formal          ::= astType:type ID:name
+                    {: RESULT = new FormalArg(type, name, lexer.getLine()); :}
+;
+
+formals      ::= COMMA formal:f formals:fs
+                    {: fs.addFirst(f); RESULT = fs; :}
+                |   {:RESULT = new LinkedList<FormalArg>(); :}
+;
+
+actuals      ::= COMMA expression:a actuals:as
+                    {: as.addFirst(a); RESULT = as; :}
+                |   {: RESULT = new LinkedList<Expr>(); :}
+;
+
+                    // x = 3
+statement       ::= ID:lv ASSIGNMENT expression:rv SEMICOLON
+                    {: RESULT = new AssignStatement(lv, rv); :}
+                    // arr[0] = 3
+                |   ID:lv LSQRBRACKET expression:index RSQRBRACKET ASSIGNMENT expression:rv SEMICOLON
+                    {: RESULT = new AssignArrayStatement(lv, index, rv); :}
+                    // if (...) else ...
+                |   IF LPAREN expression:cond RPAREN statement:thenCase ELSE statement:elseCase
+                    {: RESULT = new IfStatement(cond, thenCase, elseCase); :}
+                    // while (...) ...
+                |   WHILE LPAREN expression:cond RPAREN statement:body
+                    {: RESULT = new WhileStatement(cond, body); :}
+                |   SYSOUT LPAREN expression:arg RPAREN SEMICOLON
+                    {: RESULT = new SysoutStatement(arg); :}
+                    // { ... }  
+                |   LBRACE statements:s RBRACE
+                    {: RESULT = new BlockStatement(s); :}
+;
+
+statements   ::= statement:s statements:ss
+                    {: ss.addFirst(s); RESULT = ss; :}
+                |   {:RESULT = new LinkedList<Statement>(); :}
+;
+
+                // int/int[]/boolean/A
+astType         ::= BOOLEAN
+                    {: RESULT = new BoolAstType(); :}
+                |   INT
+                    {: RESULT = new IntAstType(); :}
+                |   INT LSQRBRACKET RSQRBRACKET
+                    {: RESULT = new IntArrayAstType(); :}
+                |   ID:type
+                    {: RESULT = new RefType(type); :}
+;
+
+expression            ::= expression:e1 ADD expression:e2
+                    {: RESULT = new AddExpr(e1, e2); :}
+                |   expression:e1 AND expression:e2
+                    {: RESULT = new AndExpr(e1, e2); :}
+                |   expression:e1 LT expression:e2
+                    {: RESULT = new LtExpr(e1, e2); :}
+                |   expression:e1 MULT expression:e2
+                    {: RESULT = new MultExpr(e1, e2); :}
+                |   expression:e1 SUB expression:e2
+                    {: RESULT = new SubtractExpr(e1, e2); :}
+                |   expression:arrayExpr LSQRBRACKET expression:indexExpr RSQRBRACKET
+                    {: RESULT = new ArrayAccessExpr(arrayExpr, indexExpr); :}
+                |   expression:arrayExpr DOT LENGTH
+                    {: RESULT = new ArrayLengthExpr(arrayExpr); :}
+                |   TRUE
+                    {: RESULT = new TrueExpr(); :}
+                |   FALSE
+                    {: RESULT = new FalseExpr(); :}
+                |   ID:id
+                    {: RESULT = new IdentifierExpr(id); :}
+                |   NUMBER:n
+                    {: RESULT = new IntegerLiteralExpr(n); :}
+                |   expression:ownerExpr DOT ID:name LPAREN RPAREN
+                    {: RESULT = new MethodCallExpr(ownerExpr, name, new LinkedList<Expr>()); :}
+                |   expression:ownerExpr DOT ID:name LPAREN expression:first actuals:as RPAREN
+                    {: as.addFirst(first); RESULT = new MethodCallExpr(ownerExpr, name, as); :}
+                |   NEW INT LSQRBRACKET expression:lengthExpr RSQRBRACKET
+                    {: RESULT = new NewIntArrayExpr(lengthExpr); :}
+                |   NEW ID:classId LPAREN RPAREN
+                    {: RESULT = new NewObjectExpr(classId); :}
+                |   NOT expression:e
+                    {: RESULT = new NotExpr(e); :}
+                |   THIS
+                    {: RESULT = new ThisExpr(); :}
+                |   LPAREN expression:e RPAREN
+                    {: RESULT = e; :}
+;
+

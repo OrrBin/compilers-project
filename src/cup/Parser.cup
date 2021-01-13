@@ -89,7 +89,7 @@ non terminal VarDecl varDecl;
 non terminal MethodDecl methodDecl;
 non terminal AstType astType;
 non terminal FormalArg formal;
-non terminal LinkedList<FormalArg> formals;
+non terminal LinkedList<FormalArg> commaformals;
 non terminal LinkedList<Expr> actuals;
 
 /***********************/
@@ -156,16 +156,15 @@ methodDeclarations  ::= methodDecl:m methodDeclarations:ms
                 // public int theThing(...) { ...    return ...}
 methodDecl      ::= PUBLIC astType:retType ID:name LPAREN RPAREN LBRACE varDeclarations:vs statements:ss RETURN expression:ret SEMICOLON RBRACE
                     {: RESULT = new MethodDecl(retType, name, new LinkedList<FormalArg>(), vs, ss, ret, lexer.getLine()); :}
-                |   PUBLIC astType:retType ID:name LPAREN formal:first formals:fs RPAREN LBRACE varDeclarations:vs statements:ss RETURN expression:ret SEMICOLON RBRACE
-                                     {: fs.addFirst(first); RESULT = new MethodDecl(retType, name, fs, vs, ss, ret, lexer.getLine()); :}
-                // TODO try remove first
+                |   PUBLIC astType:retType ID:name LPAREN formal:f commaformals:fs RPAREN LBRACE varDeclarations:vs statements:ss RETURN expression:ret SEMICOLON RBRACE
+                                     {: fs.addFirst(f); RESULT = new MethodDecl(retType, name, fs, vs, ss, ret, lexer.getLine()); :}
 ;
 
 formal          ::= astType:type ID:name
                     {: RESULT = new FormalArg(type, name, lexer.getLine()); :}
 ;
 
-formals      ::= COMMA formal:f formals:fs
+commaformals      ::= COMMA formal:f commaformals:fs
                     {: fs.addFirst(f); RESULT = fs; :}
                 |   {:RESULT = new LinkedList<FormalArg>(); :}
 ;
